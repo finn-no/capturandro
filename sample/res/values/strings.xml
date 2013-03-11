@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">sample</string>
+    <string name="add_from_camera">Add image from camera</string>
+    <string name="add_from_gallery">Add image from gallery</string>
+</resources>
