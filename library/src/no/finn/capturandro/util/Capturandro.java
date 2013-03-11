@@ -7,8 +7,8 @@ import android.media.ExifInterface;
 import android.net.Uri;
 import android.provider.MediaStore;
 
-import no.finn.capturandro.ICapturandroEventHandler;
-import no.finn.capturandro.ICapturandroPicasaEventHandler;
+import no.finn.capturandro.CapturandroEventHandler;
+import no.finn.capturandro.CapturandroPicasaEventHandler;
 import no.finn.capturandro.asynctask.DownloadFileAsyncTask;
 import no.finn.capturandro.exception.CapturandroException;
 
@@ -21,18 +21,28 @@ import static no.finn.capturandro.Config.STORED_IMAGE_WIDTH;
 
 public class Capturandro {
 
-    private final int IMAGE_FROM_CAMERA_RESULT = 1;
-    private final int IMAGE_FROM_GALLERY_RESULT = 2;
+    private final static int IMAGE_FROM_CAMERA_RESULT = 1;
+    private final static int IMAGE_FROM_GALLERY_RESULT = 2;
 
-    private static String[] PICASA_CONTENT_PROVIDERS = {
+    private final static String[] PICASA_CONTENT_PROVIDERS = {
                 "content://com.android.gallery3d.provider",
                 "content://com.google.android.gallery3d",
                 "content://com.android.sec.gallery3d",
                 "content://com.sec.android.gallery3d"
     };
 
-    private ICapturandroEventHandler eventHandler;
-    private ICapturandroPicasaEventHandler picasaEventHandler;
+    private final static String[] FILE_PATH_COLUMNS = {
+            MediaStore.MediaColumns.DATA,
+            MediaStore.MediaColumns.DISPLAY_NAME
+    };
+
+    // Added to make code more readable
+    private static final String[] NO_SELECTION_ARGS = null;
+    private static final String NO_SELECTION = null;
+    private static final String NO_SORT_ORDER = null;
+
+    private CapturandroEventHandler eventHandler;
+    private CapturandroPicasaEventHandler picasaEventHandler;
 
     private String filename;
     private File storageDirectory;
@@ -40,8 +50,8 @@ public class Capturandro {
 
 
     public static class Builder {
-        private ICapturandroEventHandler eventHandler;
-        private ICapturandroPicasaEventHandler picasaEventHandler;
+        private CapturandroEventHandler eventHandler;
+        private CapturandroPicasaEventHandler picasaEventHandler;
         private String filename;
         private File storageDirectory;
         private  Activity activity;
@@ -49,13 +59,13 @@ public class Capturandro {
         public Builder(Activity activity){
             this.activity = activity;
         }
-        public Builder withEventHandler(ICapturandroEventHandler eventHandler){
+        public Builder withEventHandler(CapturandroEventHandler eventHandler){
             this.eventHandler = eventHandler;
 
             return this;
         }
 
-        public Builder withPicasaEventHandler(ICapturandroPicasaEventHandler picasaEventHandler){
+        public Builder withPicasaEventHandler(CapturandroPicasaEventHandler picasaEventHandler){
             this.picasaEventHandler = picasaEventHandler;
 
             return this;
@@ -164,12 +174,9 @@ public class Capturandro {
     }
 
     private void handleImageFromGallery(Uri selectedImage, String filename) {
-        final String[] filePathColumn = {
-                MediaStore.MediaColumns.DATA,
-                MediaStore.MediaColumns.DISPLAY_NAME
-        };
 
-        Cursor cursor = activity.getContentResolver().query(selectedImage, filePathColumn, null, null, null);
+
+        Cursor cursor = activity.getContentResolver().query(selectedImage, FILE_PATH_COLUMNS, NO_SELECTION, NO_SELECTION_ARGS, NO_SORT_ORDER);
 
         if (cursor != null) {
             cursor.moveToFirst();
@@ -211,7 +218,7 @@ public class Capturandro {
 
     private void fetchPicasaImage(Uri selectedImage, String filename) {
         if (picasaEventHandler == null){
-            throw new IllegalStateException("Unable to import image. Did you remember to implement ICapturandroPicasaEventHandler?");
+            throw new IllegalStateException("Unable to import image. Did you remember to implement CapturandroPicasaEventHandler?");
         }
 
         new DownloadFileAsyncTask(activity, selectedImage, filename, picasaEventHandler).execute();

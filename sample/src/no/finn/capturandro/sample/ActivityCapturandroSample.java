@@ -9,13 +9,13 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.ImageView;
-import no.finn.capturandro.ICapturandroEventHandler;
-import no.finn.capturandro.ICapturandroPicasaEventHandler;
+import no.finn.capturandro.CapturandroEventHandler;
+import no.finn.capturandro.CapturandroPicasaEventHandler;
 import no.finn.capturandro.util.Capturandro;
 
 import java.io.File;
 
-public class ActivityCapturandroSample extends Activity implements ICapturandroEventHandler, ICapturandroPicasaEventHandler {
+public class ActivityCapturandroSample extends Activity implements CapturandroEventHandler, CapturandroPicasaEventHandler {
     private Capturandro capturandro;
 
     @Override

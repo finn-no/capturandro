@@ -4,23 +4,23 @@ import android.app.Activity;
 import android.app.ProgressDialog;
 import android.net.Uri;
 import android.os.AsyncTask;
-import no.finn.capturandro.ICapturandroPicasaEventHandler;
+import no.finn.capturandro.CapturandroPicasaEventHandler;
 import org.apache.commons.io.IOUtils;
 
 import java.io.*;
 import java.net.MalformedURLException;
 import java.net.URL;
 
-public class DownloadFileAsyncTask extends AsyncTask<FileObject, Integer, ICapturandroPicasaEventHandler> {
+public class DownloadFileAsyncTask extends AsyncTask<FileObject, Integer, CapturandroPicasaEventHandler> {
 
-    private final ICapturandroPicasaEventHandler capturandroPicasaEventHandler;
+    private final CapturandroPicasaEventHandler capturandroPicasaEventHandler;
     protected ProgressDialog dialog;
     protected Activity activity;
 
     private Uri uri;
     private String filename;
 
-    public DownloadFileAsyncTask(Activity activity, Uri imageToDownloadUri, String filename, ICapturandroPicasaEventHandler iFileDownloadResult) {
+    public DownloadFileAsyncTask(Activity activity, Uri imageToDownloadUri, String filename, CapturandroPicasaEventHandler iFileDownloadResult) {
         this.activity = activity;
         this.uri = imageToDownloadUri;
         this.filename = filename;
@@ -36,7 +36,7 @@ public class DownloadFileAsyncTask extends AsyncTask<FileObject, Integer, ICaptu
 //    }
 
     @Override
-    protected ICapturandroPicasaEventHandler doInBackground(FileObject... fileObjects) {
+    protected CapturandroPicasaEventHandler doInBackground(FileObject... fileObjects) {
         File file = new File(activity.getExternalCacheDir(), filename);
 
         OutputStream outputStream = null;
@@ -69,7 +69,7 @@ public class DownloadFileAsyncTask extends AsyncTask<FileObject, Integer, ICaptu
     }
 
     @Override
-    protected void onPostExecute(ICapturandroPicasaEventHandler o){
+    protected void onPostExecute(CapturandroPicasaEventHandler o){
         o.onFileDownloaded(filename);
     }
 }
