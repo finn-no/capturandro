@@ -10,7 +10,7 @@
     <uses-permission android:name="android.permission.CAMERA"/>
 
     <application android:label="@string/app_name" android:icon="@drawable/ic_launcher">
-        <activity android:name=".ActivityCapturandroSample"
+        <activity android:name=".ActivitySample"
                   android:label="@string/app_name">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>

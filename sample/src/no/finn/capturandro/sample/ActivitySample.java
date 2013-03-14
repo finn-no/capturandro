@@ -9,13 +9,13 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.ImageView;
-import no.finn.capturandro.CapturandroEventHandler;
-import no.finn.capturandro.CapturandroPicasaEventHandler;
-import no.finn.capturandro.util.Capturandro;
+import no.finn.capturandro.callbacks.CameraCallback;
+import no.finn.capturandro.callbacks.PicasaCallback;
+import no.finn.capturandro.Capturandro;
 
 import java.io.File;
 
-public class ActivityCapturandroSample extends Activity implements CapturandroEventHandler, CapturandroPicasaEventHandler {
+public class ActivitySample extends Activity implements CameraCallback, PicasaCallback {
     private Capturandro capturandro;
 
     @Override
@@ -59,8 +59,8 @@ public class ActivityCapturandroSample extends Activity implements CapturandroEv
     @Override
     public void onImportFailure(Exception e) {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setTitle("Error importing image")
-            .setMessage("An error occured while importing image")
+        builder.setTitle(getString(R.string.dialog_title_error_importing_image))
+            .setMessage(getString(R.string.dialog_message_error_importing_image))
             .create();
     }
 
@@ -70,7 +70,7 @@ public class ActivityCapturandroSample extends Activity implements CapturandroEv
     }
 
     @Override
-    public void onFileDownloaded(String filename) {
+    public void onDownloadComplete(String filename) {
         showImageFile(filename);
     }
 }

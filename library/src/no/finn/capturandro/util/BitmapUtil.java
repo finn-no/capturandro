@@ -1,13 +1,10 @@
 package no.finn.capturandro.util;
 
-import android.content.Context;
-import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Matrix;
 import android.media.ExifInterface;
 import android.net.Uri;
-import android.util.DisplayMetrics;
 
 import no.finn.capturandro.Config;
 import org.apache.commons.io.IOUtils;
@@ -22,15 +19,15 @@ public class BitmapUtil {
     // Courtesy of Fedor / Thomas Vervest
     // (http://stackoverflow.com/questions/477572/android-strange-out-of-memory-issue-while-loading-an-image-to-a-bitmap-object/823966#823966)
     public static Bitmap decodeBitmap(File file, int width, int height) throws IllegalArgumentException {
-        FileInputStream inJustDecodeBoundsImage = null;
-        FileInputStream inSampleSizeImage = null;
+        FileInputStream inJustDecodeBoundsImageStream = null;
+        FileInputStream inSampleSizeImageStream = null;
         try {
             // Decode image size
             BitmapFactory.Options o = new BitmapFactory.Options();
             o.inJustDecodeBounds = true;
 
-            inJustDecodeBoundsImage = new FileInputStream(file);
-            BitmapFactory.decodeStream(inJustDecodeBoundsImage, null, o);
+            inJustDecodeBoundsImageStream = new FileInputStream(file);
+            BitmapFactory.decodeStream(inJustDecodeBoundsImageStream, null, o);
 
             // Decode withEventHandler inSampleSize
             BitmapFactory.Options o2 = new BitmapFactory.Options();
@@ -38,14 +35,14 @@ public class BitmapUtil {
             // Parameters are width and height, but these are equal in our case
             o2.inSampleSize = calculateInSampleSize(o, width, height);
 
-            inSampleSizeImage = new FileInputStream(file);
+            inSampleSizeImageStream = new FileInputStream(file);
 
-            return BitmapFactory.decodeStream(inSampleSizeImage, null, o2);
+            return BitmapFactory.decodeStream(inSampleSizeImageStream, null, o2);
         } catch (FileNotFoundException e) {
             throw new IllegalArgumentException(e.getMessage(), e);
         } finally {
-            IOUtils.closeQuietly(inJustDecodeBoundsImage);
-            IOUtils.closeQuietly(inSampleSizeImage);
+            IOUtils.closeQuietly(inJustDecodeBoundsImageStream);
+            IOUtils.closeQuietly(inSampleSizeImageStream);
         }
     }
 
@@ -67,7 +64,7 @@ public class BitmapUtil {
 
 
     public static void saveBitmap(Bitmap bitmap, File filenameToSave) throws IllegalArgumentException {
-        saveBitmap(bitmap, filenameToSave, Config.STORED_IMAGE_COMPRESSION_PERCENT);
+        saveBitmap(bitmap, filenameToSave, Config.DEFAULT_STORED_IMAGE_COMPRESSION_PERCENT);
     }
 
     public static void saveBitmap(Bitmap bitmap, File filenameToSave, int compressionPercentage) throws IllegalArgumentException {
@@ -146,15 +143,13 @@ public class BitmapUtil {
     }
 
     public static ExifInterface getExifFromFile(File file) {
-        ExifInterface exif = null;
+        ExifInterface exif;
 
         try {
-            exif = new ExifInterface(file.getPath());
+            return new ExifInterface(file.getPath());
         } catch (IOException e) {
             throw new RuntimeException(e); // TODO: Handle better
         }
-
-        return exif;
     }
 
     public static Bitmap fetchBitmap(Uri uri, File fileToSave, int compressionPercentage) throws IOException {
@@ -169,7 +164,7 @@ public class BitmapUtil {
             IOUtils.closeQuietly(inputStream);
         }
 
-        BitmapUtil.resizeAndSaveBitmapFile(fileToSave, Config.STORED_IMAGE_WIDTH, Config.STORED_IMAGE_HEIGHT, compressionPercentage);
+        BitmapUtil.resizeAndSaveBitmapFile(fileToSave, Config.DEFAULT_STORED_IMAGE_WIDTH, Config.DEFAULT_STORED_IMAGE_HEIGHT, compressionPercentage);
 
         return BitmapUtil.decodeBitmap(fileToSave, 400, 400);
     }

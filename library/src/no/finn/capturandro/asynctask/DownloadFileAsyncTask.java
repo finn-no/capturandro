@@ -1,42 +1,34 @@
 package no.finn.capturandro.asynctask;
 
 import android.app.Activity;
-import android.app.ProgressDialog;
 import android.net.Uri;
 import android.os.AsyncTask;
-import no.finn.capturandro.CapturandroPicasaEventHandler;
+import no.finn.capturandro.callbacks.PicasaCallback;
 import org.apache.commons.io.IOUtils;
 
 import java.io.*;
 import java.net.MalformedURLException;
 import java.net.URL;
 
-public class DownloadFileAsyncTask extends AsyncTask<FileObject, Integer, CapturandroPicasaEventHandler> {
+public class DownloadFileAsyncTask extends AsyncTask<Void, Integer, PicasaCallback> {
 
-    private final CapturandroPicasaEventHandler capturandroPicasaEventHandler;
-    protected ProgressDialog dialog;
+    private final PicasaCallback picasaCallback;
     protected Activity activity;
 
     private Uri uri;
     private String filename;
 
-    public DownloadFileAsyncTask(Activity activity, Uri imageToDownloadUri, String filename, CapturandroPicasaEventHandler iFileDownloadResult) {
+    public DownloadFileAsyncTask(Activity activity, Uri imageToDownloadUri, String filename, PicasaCallback iFileDownloadResult) {
         this.activity = activity;
         this.uri = imageToDownloadUri;
         this.filename = filename;
-        this.capturandroPicasaEventHandler = iFileDownloadResult;
+        this.picasaCallback = iFileDownloadResult;
     }
 
 
-//    private Bitmap getPicasaBitmap(String filename, Uri uri) throws IOException {
-//
-//        // BitmapUtil.resizeAndSaveBitmapFile(filename, Config.STORED_AD_IMAGE_WIDTH, Config.STORED_AD_IMAGE_HEIGHT);
-//
-//        return BitmapUtil.decodeBitmap(filename, 400, 400);
-//    }
 
     @Override
-    protected CapturandroPicasaEventHandler doInBackground(FileObject... fileObjects) {
+    protected PicasaCallback doInBackground(Void... voids) {
         File file = new File(activity.getExternalCacheDir(), filename);
 
         OutputStream outputStream = null;
@@ -65,11 +57,11 @@ public class DownloadFileAsyncTask extends AsyncTask<FileObject, Integer, Captur
             IOUtils.closeQuietly(inputStream);
         }
 
-        return capturandroPicasaEventHandler;
+        return picasaCallback;
     }
 
     @Override
-    protected void onPostExecute(CapturandroPicasaEventHandler o){
-        o.onFileDownloaded(filename);
+    protected void onPostExecute(PicasaCallback picasaCallback){
+        picasaCallback.onDownloadComplete(filename);
     }
 }

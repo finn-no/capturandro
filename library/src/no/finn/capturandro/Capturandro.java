@@ -1,4 +1,4 @@
-package no.finn.capturandro.util;
+package no.finn.capturandro;
 
 import android.app.Activity;
 import android.content.Intent;
@@ -7,17 +7,18 @@ import android.media.ExifInterface;
 import android.net.Uri;
 import android.provider.MediaStore;
 
-import no.finn.capturandro.CapturandroEventHandler;
-import no.finn.capturandro.CapturandroPicasaEventHandler;
+import no.finn.capturandro.callbacks.CameraCallback;
+import no.finn.capturandro.callbacks.PicasaCallback;
 import no.finn.capturandro.asynctask.DownloadFileAsyncTask;
 import no.finn.capturandro.exception.CapturandroException;
+import no.finn.capturandro.util.BitmapUtil;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 
-import static no.finn.capturandro.Config.STORED_IMAGE_HEIGHT;
-import static no.finn.capturandro.Config.STORED_IMAGE_WIDTH;
+import static no.finn.capturandro.Config.DEFAULT_STORED_IMAGE_HEIGHT;
+import static no.finn.capturandro.Config.DEFAULT_STORED_IMAGE_WIDTH;
 
 public class Capturandro {
 
@@ -41,8 +42,8 @@ public class Capturandro {
     private static final String NO_SELECTION = null;
     private static final String NO_SORT_ORDER = null;
 
-    private CapturandroEventHandler eventHandler;
-    private CapturandroPicasaEventHandler picasaEventHandler;
+    private CameraCallback cameraCallback;
+    private PicasaCallback picasaCallback;
 
     private String filename;
     private File storageDirectory;
@@ -50,8 +51,8 @@ public class Capturandro {
 
 
     public static class Builder {
-        private CapturandroEventHandler eventHandler;
-        private CapturandroPicasaEventHandler picasaEventHandler;
+        private CameraCallback cameraCallback;
+        private PicasaCallback picasaCallback;
         private String filename;
         private File storageDirectory;
         private  Activity activity;
@@ -59,14 +60,14 @@ public class Capturandro {
         public Builder(Activity activity){
             this.activity = activity;
         }
-        public Builder withEventHandler(CapturandroEventHandler eventHandler){
-            this.eventHandler = eventHandler;
+        public Builder withEventHandler(CameraCallback cameraCallback){
+            this.cameraCallback = cameraCallback;
 
             return this;
         }
 
-        public Builder withPicasaEventHandler(CapturandroPicasaEventHandler picasaEventHandler){
-            this.picasaEventHandler = picasaEventHandler;
+        public Builder withPicasaEventHandler(PicasaCallback picasaCallback){
+            this.picasaCallback = picasaCallback;
 
             return this;
         }
@@ -90,8 +91,8 @@ public class Capturandro {
 
     public Capturandro(Builder builder) {
         this.activity = builder.activity;
-        this.eventHandler = builder.eventHandler;
-        this.picasaEventHandler = builder.picasaEventHandler;
+        this.cameraCallback = builder.cameraCallback;
+        this.picasaCallback = builder.picasaCallback;
         this.filename = builder.filename;
         this.storageDirectory = builder.storageDirectory;
     }
@@ -111,8 +112,8 @@ public class Capturandro {
     }
 
     public void onActivityResult(int reqCode, int resultCode, Intent intent) throws IllegalArgumentException {
-        if (eventHandler == null){
-            throw new IllegalStateException("Unable to import image. Did you remember to implement ICapturandroiEventHandler?");
+        if (cameraCallback == null){
+            throw new IllegalStateException("Unable to import image. Did you remember to implement CameraCallback?");
         }
 
         switch (reqCode) {
@@ -124,13 +125,13 @@ public class Capturandro {
                             fileToStore.createNewFile();
                         } catch (IOException e) {
                             e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
-                            eventHandler.onImportFailure(e);
+                            cameraCallback.onImportFailure(e);
                         }
                         saveBitmap(filename, fileToStore, fileToStore);
-                        eventHandler.onImportSuccess(filename);
+                        cameraCallback.onImportSuccess(filename);
                     } else {
                         // Throw exception saying image couldnt be added. Or something. showImageCouldNotBeAddedDialog();
-                        eventHandler.onImportFailure(new CapturandroException("Image could not be added"));
+                        cameraCallback.onImportFailure(new CapturandroException("Image could not be added"));
                     }
                 }
 
@@ -143,7 +144,7 @@ public class Capturandro {
                 }
 
                 if (isUserAttemptingToAddVideo(selectedImage)){
-                    eventHandler.onImportFailure(new CapturandroException("Video can't be added"));
+                    cameraCallback.onImportFailure(new CapturandroException("Video can't be added"));
                     break;
                 }
 
@@ -161,15 +162,15 @@ public class Capturandro {
 
         try {
             if (exifInterface != null){
-                BitmapUtil.resizeAndRotateAndSaveBitmapFile(inFile, outFile, exifInterface, STORED_IMAGE_WIDTH, STORED_IMAGE_HEIGHT);
+                BitmapUtil.resizeAndRotateAndSaveBitmapFile(inFile, outFile, exifInterface, DEFAULT_STORED_IMAGE_WIDTH, DEFAULT_STORED_IMAGE_HEIGHT);
             } else {
-                BitmapUtil.resizeAndSaveBitmapFile(outFile, STORED_IMAGE_WIDTH, STORED_IMAGE_HEIGHT);
+                BitmapUtil.resizeAndSaveBitmapFile(outFile, DEFAULT_STORED_IMAGE_WIDTH, DEFAULT_STORED_IMAGE_HEIGHT);
             }
 
-            eventHandler.onImportSuccess(imageFilename);
+            cameraCallback.onImportSuccess(imageFilename);
 
         } catch (IllegalArgumentException e) {
-            eventHandler.onImportFailure(e);
+            cameraCallback.onImportFailure(e);
         }
     }
 
@@ -217,11 +218,11 @@ public class Capturandro {
     }
 
     private void fetchPicasaImage(Uri selectedImage, String filename) {
-        if (picasaEventHandler == null){
-            throw new IllegalStateException("Unable to import image. Did you remember to implement CapturandroPicasaEventHandler?");
+        if (picasaCallback == null){
+            throw new IllegalStateException("Unable to import image. Did you remember to implement PicasaCallback?");
         }
 
-        new DownloadFileAsyncTask(activity, selectedImage, filename, picasaEventHandler).execute();
+        new DownloadFileAsyncTask(activity, selectedImage, filename, picasaCallback).execute();
     }
 
 
@@ -231,7 +232,7 @@ public class Capturandro {
         File outFile = new File(activity.getExternalCacheDir(), filename);
 
         saveBitmap(filename, inFile, outFile);
-        eventHandler.onImportSuccess(filename);
+        cameraCallback.onImportSuccess(filename);
     }
 
     private boolean isUserAttemptingToAddVideo(Uri selectedImage) {
@@ -259,6 +260,12 @@ public class Capturandro {
         handleImageFromGallery(imageUris,  filename);
     }
 
+    private boolean isReceivingImage(Intent intent) {
+        String action = intent.getAction();
+        String mimeType = intent.getType();
+        return (Intent.ACTION_SEND.equals(action) || Intent.ACTION_SEND_MULTIPLE.equals(action))
+                && (mimeType != null && mimeType.startsWith("image"));
+    }
 
     public File getStorageDirectory() {
         if (storageDirectory == null){
