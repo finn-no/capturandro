@@ -19,8 +19,7 @@ How-To
 ------
 Use Capturandro.Builder() to instansiate Capturandro and set required and optional parameters:
 ```java
-Capturandro
-    .Builder()
+Capturandro capturandro = Capturandro.Builder()
         .withCameraCallback(someCameraCallback) // See documentation below
         .withPicasaCallback(somePicasaCallback) // See documentation below
         .withStorageDirectory("/path/to/some/storage/dir"); // Discouraged! App uses getExternalCacheDir() by default
