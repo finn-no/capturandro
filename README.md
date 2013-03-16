@@ -17,9 +17,17 @@ Features
 
 How-To
 ------
-Use Capturandro.Builder() to instansiate Capturandro and set required and optional parameters.
+Use Capturandro.Builder() to instansiate Capturandro and set required and optional parameters:
+```java
+Capturandro
+    .Builder()
+        .withCameraCallback(someCameraCallback) // See documentation below
+        .withPicasaCallback(somePicasaCallback) // See documentation below
+        .withStorageDirectory("/path/to/some/storage/dir"); // Discouraged! App uses getExternalCacheDir() by default
+        .withFileName("someFilename.jpg") // Can be used if all imported images shall have the same filename
+```
 
-Given the resulting instance is named capturandro, imports can be achieved as follows:
+Given the resulting instance is named capturandro, imports can be done as follows:
 
 ```java
 // Import from camera:
