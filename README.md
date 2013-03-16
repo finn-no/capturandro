@@ -1,13 +1,40 @@
 Capturandro
 ===========
 
+Warning: While this is a working project, it is still work in progress, and we don't recommend using it in production.
+
 About
 -----
 Capturandro is an easy-to-use image import library for Android.
 
 
+Features
+------
+* Import image from camera
+* Import local image from Gallery
+* Import Picasa image from Gallery app
+* Handle send intents (both single- and multiple images) from different applications.
+
 How-To
 ------
+Use Capturandro.Builder() to instansiate Capturandro and set required and optional parameters:
+```java
+Capturandro capturandro = Capturandro.Builder()
+        .withCameraCallback(someCameraCallback) // See documentation below
+        .withPicasaCallback(somePicasaCallback) // See documentation below
+        .withStorageDirectory("/path/to/some/storage/dir"); // Discouraged! App uses getExternalCacheDir() by default
+        .withFileName("someFilename.jpg") // Can be used if all imported images shall have the same filename
+```
+
+Given the resulting instance is named capturandro, imports can be done as follows:
+
+```java
+// Import from camera:
+capturandro.importImageFromCamera("savedCameraImage.jpg");
+
+// Import image from gallery
+capturandro.importImageFromGallery("savedGalleryImage.jpg")
+```
 
 License
 -------
