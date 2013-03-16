@@ -24,6 +24,7 @@ Capturandro capturandro = Capturandro.Builder()
         .withPicasaCallback(somePicasaCallback) // See documentation below
         .withStorageDirectory("/path/to/some/storage/dir"); // Discouraged! App uses getExternalCacheDir() by default
         .withFileName("someFilename.jpg") // Can be used if all imported images shall have the same filename
+        .build();
 ```
 
 Given the resulting instance is named capturandro, imports can be done as follows:
