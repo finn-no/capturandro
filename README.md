@@ -17,7 +17,7 @@ Features
 
 How-To
 ------
-Use Capturandro.Builder() to instansiate an Capturandro, and set required an optional parameters.
+Use Capturandro.Builder() to instansiate Capturandro and set required and optional parameters.
 
 Given the resulting instance is named capturandro, imports can be achieved as follows:
 
