@@ -2,6 +2,7 @@ package no.finn.capturandro.sample;
 
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.app.ProgressDialog;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -15,8 +16,9 @@ import no.finn.capturandro.Capturandro;
 
 import java.io.File;
 
-public class ActivitySample extends Activity implements CameraCallback, PicasaCallback {
+public class CapturandroSampleActivity extends Activity implements CameraCallback, PicasaCallback {
     private Capturandro capturandro;
+    private ProgressDialog progressDialog;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -24,8 +26,8 @@ public class ActivitySample extends Activity implements CameraCallback, PicasaCa
         setContentView(R.layout.main);
 
         capturandro = new Capturandro.Builder(this)
-                                .withEventHandler(this)
-                                .withPicasaEventHandler(this)
+                                .withCameraCallback(this)
+                                .withPicasaCallback(this)
                                 .build();
     }
 
@@ -65,12 +67,13 @@ public class ActivitySample extends Activity implements CameraCallback, PicasaCa
     }
 
     @Override
-    public void onProgressUpdate(Integer... progress) {
-        Log.d("Capturandro", "Progress is now " + progress);
+    public void onPicasaDownloadStarted(String filename) {
+        progressDialog = ProgressDialog.show(this, "Downloading", "Downloading image from Picasa...", true);
     }
 
     @Override
-    public void onDownloadComplete(String filename) {
+    public void onPicasaDownloadComplete(String filename) {
+        progressDialog.dismiss();
         showImageFile(filename);
     }
 }

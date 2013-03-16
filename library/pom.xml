@@ -3,7 +3,7 @@
  Copyright (C) 2012 FINN.no
 
   Licensed under the Apache License, Version 2.0 (the "License");
-  you may not use this file except in compliance withEventHandler the License.
+  you may not use this file except in compliance withCameraCallback the License.
   You may obtain a copy of the License at
 
        http://www.apache.org/licenses/LICENSE-2.0
@@ -26,7 +26,7 @@
 
     <groupId>no.finn</groupId>
     <artifactId>capturandro</artifactId>
-    <packaging>apklib</packaging>
+    <packaging>jar</packaging>
     <name>Capturandro</name>
 
     <dependencies>

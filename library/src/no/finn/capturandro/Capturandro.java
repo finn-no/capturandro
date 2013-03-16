@@ -17,8 +17,8 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 
-import static no.finn.capturandro.Config.DEFAULT_STORED_IMAGE_HEIGHT;
-import static no.finn.capturandro.Config.DEFAULT_STORED_IMAGE_WIDTH;
+import static no.finn.capturandro.Config.STORED_IMAGE_HEIGHT;
+import static no.finn.capturandro.Config.STORED_IMAGE_WIDTH;
 
 public class Capturandro {
 
@@ -55,18 +55,19 @@ public class Capturandro {
         private PicasaCallback picasaCallback;
         private String filename;
         private File storageDirectory;
-        private  Activity activity;
+        private Activity activity;
 
         public Builder(Activity activity){
             this.activity = activity;
         }
-        public Builder withEventHandler(CameraCallback cameraCallback){
+
+        public Builder withCameraCallback(CameraCallback cameraCallback){
             this.cameraCallback = cameraCallback;
 
             return this;
         }
 
-        public Builder withPicasaEventHandler(PicasaCallback picasaCallback){
+        public Builder withPicasaCallback(PicasaCallback picasaCallback){
             this.picasaCallback = picasaCallback;
 
             return this;
@@ -113,7 +114,7 @@ public class Capturandro {
 
     public void onActivityResult(int reqCode, int resultCode, Intent intent) throws IllegalArgumentException {
         if (cameraCallback == null){
-            throw new IllegalStateException("Unable to import image. Did you remember to implement CameraCallback?");
+            throw new IllegalStateException("Unable to import image. Have you implemented CameraCallback?");
         }
 
         switch (reqCode) {
@@ -162,9 +163,9 @@ public class Capturandro {
 
         try {
             if (exifInterface != null){
-                BitmapUtil.resizeAndRotateAndSaveBitmapFile(inFile, outFile, exifInterface, DEFAULT_STORED_IMAGE_WIDTH, DEFAULT_STORED_IMAGE_HEIGHT);
+                BitmapUtil.resizeAndRotateAndSaveBitmapFile(inFile, outFile, exifInterface, STORED_IMAGE_WIDTH, STORED_IMAGE_HEIGHT);
             } else {
-                BitmapUtil.resizeAndSaveBitmapFile(outFile, DEFAULT_STORED_IMAGE_WIDTH, DEFAULT_STORED_IMAGE_HEIGHT);
+                BitmapUtil.resizeAndSaveBitmapFile(outFile, STORED_IMAGE_WIDTH, STORED_IMAGE_HEIGHT);
             }
 
             cameraCallback.onImportSuccess(imageFilename);
@@ -175,8 +176,6 @@ public class Capturandro {
     }
 
     private void handleImageFromGallery(Uri selectedImage, String filename) {
-
-
         Cursor cursor = activity.getContentResolver().query(selectedImage, FILE_PATH_COLUMNS, NO_SELECTION, NO_SELECTION_ARGS, NO_SORT_ORDER);
 
         if (cursor != null) {
@@ -194,6 +193,9 @@ public class Capturandro {
             fetchPicasaImage(selectedImage, filename);
         }
     }
+
+
+
 
     private boolean isPicasaAndroid2Image(Uri selectedImage) {
         return selectedImage != null && selectedImage.toString().length() > 0;
@@ -219,7 +221,7 @@ public class Capturandro {
 
     private void fetchPicasaImage(Uri selectedImage, String filename) {
         if (picasaCallback == null){
-            throw new IllegalStateException("Unable to import image. Did you remember to implement PicasaCallback?");
+            throw new IllegalStateException("Unable to import image. Have you implemented PicasaCallback?");
         }
 
         new DownloadFileAsyncTask(activity, selectedImage, filename, picasaCallback).execute();
@@ -237,7 +239,6 @@ public class Capturandro {
 
     private boolean isUserAttemptingToAddVideo(Uri selectedImage) {
         return selectedImage != null && selectedImage.toString().startsWith("content://media/external/video/");
-
     }
 
     public ArrayList<Uri> getImagesFromIntent(Intent intent) {
@@ -256,7 +257,7 @@ public class Capturandro {
         return imageUris;
     }
 
-    public void handleSendImage(Uri imageUris, String filename) {
+    public void handleSendImages(Uri imageUris, String filename) {
         handleImageFromGallery(imageUris,  filename);
     }
 

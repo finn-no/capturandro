@@ -1,6 +1,7 @@
 package no.finn.capturandro.asynctask;
 
 import android.app.Activity;
+import android.content.ContentResolver;
 import android.net.Uri;
 import android.os.AsyncTask;
 import no.finn.capturandro.callbacks.PicasaCallback;
@@ -18,25 +19,29 @@ public class DownloadFileAsyncTask extends AsyncTask<Void, Integer, PicasaCallba
     private Uri uri;
     private String filename;
 
-    public DownloadFileAsyncTask(Activity activity, Uri imageToDownloadUri, String filename, PicasaCallback iFileDownloadResult) {
+    public DownloadFileAsyncTask(Activity activity, Uri imageToDownloadUri, String filename, PicasaCallback picasaCallback) {
         this.activity = activity;
         this.uri = imageToDownloadUri;
         this.filename = filename;
-        this.picasaCallback = iFileDownloadResult;
+        this.picasaCallback = picasaCallback;
     }
 
-
+    @Override
+    protected void onPreExecute(){
+        picasaCallback.onPicasaDownloadStarted(filename);
+    }
 
     @Override
     protected PicasaCallback doInBackground(Void... voids) {
         File file = new File(activity.getExternalCacheDir(), filename);
-
         OutputStream outputStream = null;
         InputStream inputStream = null;
 
         try {
             if (uri.toString().startsWith("content://")) {
                 try {
+                    ContentResolver cr = activity.getContentResolver();
+                    //Cursor cursor = cr.query(uri)
                     inputStream = activity.getContentResolver().openInputStream(uri);
                 } catch (FileNotFoundException e) {
                 }
@@ -62,6 +67,6 @@ public class DownloadFileAsyncTask extends AsyncTask<Void, Integer, PicasaCallba
 
     @Override
     protected void onPostExecute(PicasaCallback picasaCallback){
-        picasaCallback.onDownloadComplete(filename);
+        picasaCallback.onPicasaDownloadComplete(filename);
     }
 }

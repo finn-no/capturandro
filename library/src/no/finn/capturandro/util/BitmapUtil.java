@@ -29,7 +29,7 @@ public class BitmapUtil {
             inJustDecodeBoundsImageStream = new FileInputStream(file);
             BitmapFactory.decodeStream(inJustDecodeBoundsImageStream, null, o);
 
-            // Decode withEventHandler inSampleSize
+            // Decode withCameraCallback inSampleSize
             BitmapFactory.Options o2 = new BitmapFactory.Options();
 
             // Parameters are width and height, but these are equal in our case
@@ -92,7 +92,7 @@ public class BitmapUtil {
                 inSampleSize = Math.round((float) width / (float) reqWidth);
             }
 
-            // Handle images withEventHandler weird aspect ratios
+            // Handle images withCameraCallback weird aspect ratios
             final float totalPixels = width * height;
             final float totalReqPixelsCap = reqWidth * reqHeight * 2;
 
@@ -164,7 +164,7 @@ public class BitmapUtil {
             IOUtils.closeQuietly(inputStream);
         }
 
-        BitmapUtil.resizeAndSaveBitmapFile(fileToSave, Config.DEFAULT_STORED_IMAGE_WIDTH, Config.DEFAULT_STORED_IMAGE_HEIGHT, compressionPercentage);
+        BitmapUtil.resizeAndSaveBitmapFile(fileToSave, Config.STORED_IMAGE_WIDTH, Config.STORED_IMAGE_HEIGHT, compressionPercentage);
 
         return BitmapUtil.decodeBitmap(fileToSave, 400, 400);
     }
