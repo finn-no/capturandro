@@ -7,9 +7,9 @@ import android.media.ExifInterface;
 import android.net.Uri;
 import android.provider.MediaStore;
 
+import no.finn.capturandro.asynctask.DownloadPicasaImageAsyncTask;
 import no.finn.capturandro.callbacks.CameraCallback;
 import no.finn.capturandro.callbacks.PicasaCallback;
-import no.finn.capturandro.asynctask.DownloadFileAsyncTask;
 import no.finn.capturandro.exception.CapturandroException;
 import no.finn.capturandro.util.BitmapUtil;
 
@@ -48,7 +48,6 @@ public class Capturandro {
     private String filename;
     private File storageDirectory;
     private Activity activity;
-
 
     public static class Builder {
         private CameraCallback cameraCallback;
@@ -224,7 +223,7 @@ public class Capturandro {
             throw new IllegalStateException("Unable to import image. Have you implemented PicasaCallback?");
         }
 
-        new DownloadFileAsyncTask(activity, selectedImage, filename, picasaCallback).execute();
+        new DownloadPicasaImageAsyncTask(activity, selectedImage, filename, picasaCallback).execute();
     }
 
 
@@ -239,6 +238,12 @@ public class Capturandro {
 
     private boolean isUserAttemptingToAddVideo(Uri selectedImage) {
         return selectedImage != null && selectedImage.toString().startsWith("content://media/external/video/");
+    }
+
+    public void handleImageIfSentFromGallery(Intent intent) {
+        if (isReceivingImage(intent)){
+            handleSendImages(getImagesFromIntent(intent));
+        }
     }
 
     public ArrayList<Uri> getImagesFromIntent(Intent intent) {
@@ -257,8 +262,12 @@ public class Capturandro {
         return imageUris;
     }
 
-    public void handleSendImages(Uri imageUris, String filename) {
-        handleImageFromGallery(imageUris,  filename);
+    private void handleSendImages(ArrayList<Uri> imagesFromIntent) {
+        for (Uri imageUri : imagesFromIntent){
+            String filename = System.currentTimeMillis() + ".jpg";
+
+            handleImageFromGallery(imageUri, filename);
+        }
     }
 
     private boolean isReceivingImage(Intent intent) {

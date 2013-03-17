@@ -11,7 +11,7 @@ import java.io.*;
 import java.net.MalformedURLException;
 import java.net.URL;
 
-public class DownloadFileAsyncTask extends AsyncTask<Void, Integer, PicasaCallback> {
+public class DownloadPicasaImageAsyncTask extends AsyncTask<Void, Integer, PicasaCallback> {
 
     private final PicasaCallback picasaCallback;
     protected Activity activity;
@@ -19,7 +19,7 @@ public class DownloadFileAsyncTask extends AsyncTask<Void, Integer, PicasaCallba
     private Uri uri;
     private String filename;
 
-    public DownloadFileAsyncTask(Activity activity, Uri imageToDownloadUri, String filename, PicasaCallback picasaCallback) {
+    public DownloadPicasaImageAsyncTask(Activity activity, Uri imageToDownloadUri, String filename, PicasaCallback picasaCallback) {
         this.activity = activity;
         this.uri = imageToDownloadUri;
         this.filename = filename;

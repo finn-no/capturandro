@@ -29,6 +29,7 @@ public class CapturandroSampleActivity extends Activity implements CameraCallbac
                                 .withCameraCallback(this)
                                 .withPicasaCallback(this)
                                 .build();
+        capturandro.handleImageIfSentFromGallery(getIntent());
     }
 
     public void addFromCameraClick(View v){
