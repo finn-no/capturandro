@@ -40,13 +40,13 @@ Give you instance is named capturandro, imports can be done as follows:
 // Import from camera with given output filename:
 capturandro.importImageFromCamera("savedCameraImage.jpg");
 
-// Import from camera, storing image with random filename
+// Import from camera, storing image with semi-random filename: [filenamePrefix] + System.currentTimeMillis() + ".jpg"
 capturandro.importImageFromCamera();
 
 // Import from gallery with given output filename:
 capturandro.importImageFromGallery("savedGalleryImage.jpg")
 
-// Import from gallery, storing image with random filename
+// Import from gallery, storing image with semi-random filename: [filenamePrefix] + System.currentTimeMillis() + ".jpg"
 capturandro.importImageFromGallery()
 ```
 
