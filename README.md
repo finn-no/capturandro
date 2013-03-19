@@ -1,22 +1,20 @@
-Capturandro
-===========
+# Capturandro
+
 
 Warning: While this is a working project, it is still work in progress, and we don't recommend using it in production.
 
-About
------
+## About
 Capturandro is an easy-to-use image import library for Android.
 
 
-Features
-------
+## Features
 * Import image from camera
 * Import local image from Gallery
 * Import Picasa image from Gallery app
 * Handle send intents (both single- and multiple images) from different applications.
 
-How To Use
-----------
+## How To Use
+### Capturandro.Builder()
 Use Capturandro.Builder() to create an instance of Capturandro and set parameters:
 ```java
 Capturandro capturandro = Capturandro.Builder()
@@ -27,6 +25,7 @@ Capturandro capturandro = Capturandro.Builder()
         .build();
 ```
 
+### Callbacks
 Implement CameraCallback and/or PicasaCallback in your Activity. CameraCallback will be called if adding an image has
 succeeded or failed. In CameraCallback.onImportSuccess(String filename) is the place where you would put code to
 show the image in your application. CameraCallback.onImportFailure(Exception e) contains information if something has
@@ -34,7 +33,7 @@ failed during the import. Use PicasaCallback.onPicasaImportStarted(String filena
 downloading, and PicasaCallback.onPicasaImportCompleted(String filename).
 
 
-
+### Image import
 Give you instance is named capturandro, imports can be done as follows:
 
 ```java
@@ -51,7 +50,8 @@ capturandro.importImageFromGallery("savedGalleryImage.jpg")
 capturandro.importImageFromGallery()
 ```
 
-Capturandro supports send intents, meaning that apps (e.g. Gallery) can share images with your app.
+### Send/share intents
+Capturandro supports send/share intents, meaning that apps (e.g. Gallery) can share images with your app.
 But, you will have to do some job in your own app to make it work.
 
 In your AndroidManifest.xml, add the following to the activity that you want to handle the send intent:
@@ -71,8 +71,7 @@ passing the intent passed in to the activity:
 capturandro.handleImageIfSentFromGallery(getIntent());
 ```
 
-License
--------
+## License
 
     Copyright 2013 FINN.no.
 
