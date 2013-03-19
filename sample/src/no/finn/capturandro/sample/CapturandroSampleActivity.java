@@ -7,9 +7,10 @@ import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Bundle;
-import android.util.Log;
+import android.support.v4.view.ViewPager;
 import android.view.View;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import no.finn.capturandro.callbacks.CameraCallback;
 import no.finn.capturandro.callbacks.PicasaCallback;
 import no.finn.capturandro.Capturandro;
@@ -51,11 +52,15 @@ public class CapturandroSampleActivity extends Activity implements CameraCallbac
     }
 
     private void showImageFile(String filename) {
+
         File imageFile = new File(getExternalCacheDir(), filename);
 
-        if(imageFile.exists()){
+        if (imageFile.exists()){
             Bitmap bitmap = BitmapFactory.decodeFile(imageFile.getAbsolutePath());
-            ((ImageView)findViewById(R.id.image)).setImageBitmap(bitmap);
+            ImageView imageView = new ImageView(this);
+            imageView.setImageBitmap(bitmap);
+            imageView.setLayoutParams(new ViewPager.LayoutParams());
+            ((LinearLayout)findViewById(R.id.view_pager_images)).addView(imageView);
         }
     }
 

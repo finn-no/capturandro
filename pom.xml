@@ -43,7 +43,7 @@
         <binary.prefix>finn</binary.prefix>
 
         <!-- Dependencies -->
-        <android.version>4.1.1.4</android.version>
+        <android.version>2.3.3</android.version>
         <android.platform>16</android.platform>
         <android.support.version>r7</android.support.version>
         <commons-io.version>2.2</commons-io.version>

@@ -128,7 +128,6 @@ public class Capturandro {
                             cameraCallback.onImportFailure(e);
                         }
                         saveBitmap(filename, fileToStore, fileToStore);
-                        cameraCallback.onImportSuccess(filename);
                     } else {
                         // Throw exception saying image couldnt be added. Or something. showImageCouldNotBeAddedDialog();
                         cameraCallback.onImportFailure(new CapturandroException("Image could not be added"));
@@ -233,7 +232,6 @@ public class Capturandro {
         File outFile = new File(activity.getExternalCacheDir(), filename);
 
         saveBitmap(filename, inFile, outFile);
-        cameraCallback.onImportSuccess(filename);
     }
 
     private boolean isUserAttemptingToAddVideo(Uri selectedImage) {
