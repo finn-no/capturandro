@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">sample</string>
+    <string name="app_name">Capturandro Sample</string>
     <string name="add_from_camera">Add image from camera</string>
     <string name="add_from_gallery">Add image from gallery</string>
     <string name="dialog_title_error_importing_image">Error importing image</string>
