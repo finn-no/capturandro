@@ -1,44 +1,77 @@
-Capturandro
-===========
+# Capturandro
+
 
 Warning: While this is a working project, it is still work in progress, and we don't recommend using it in production.
 
-About
------
+## About
 Capturandro is an easy-to-use image import library for Android.
 
 
-Features
-------
+## Features
 * Import image from camera
 * Import local image from Gallery
 * Import Picasa image from Gallery app
 * Handle send intents (both single- and multiple images) from different applications.
 
-How-To
-------
-Use Capturandro.Builder() to instansiate Capturandro and set required and optional parameters:
+## How To Use
+### Capturandro.Builder()
+Use Capturandro.Builder() to create an instance of Capturandro and set parameters:
 ```java
 Capturandro capturandro = Capturandro.Builder()
         .withCameraCallback(someCameraCallback) // See documentation below
         .withPicasaCallback(somePicasaCallback) // See documentation below
-        .withStorageDirectory("/path/to/some/storage/dir"); // Discouraged! App uses getExternalCacheDir() by default
-        .withFileName("someFilename.jpg") // Can be used if all imported images shall have the same filename
+        .withStorageDirectoryPath("/path/to/some/storage/dir"); // Discouraged! App uses getExternalCacheDir() by default
+        .withFilenamePrefix("capturandro") // Prefixed filenames with "capturandro_", e.g. "capturandro_001.jpg"
         .build();
 ```
 
-Given the resulting instance is named capturandro, imports can be done as follows:
+### Callbacks
+Implement CameraCallback and/or PicasaCallback in your Activity. CameraCallback will be called if adding an image has
+succeeded or failed. In CameraCallback.onImportSuccess(String filename) is the place where you would put code to
+show the image in your application. CameraCallback.onImportFailure(Exception e) contains information if something has
+failed during the import. Use PicasaCallback.onPicasaImportStarted(String filename) is called when a Picasa image has started
+downloading, and PicasaCallback.onPicasaImportCompleted(String filename).
+
+
+### Image import
+Give you instance is named capturandro, imports can be done as follows:
 
 ```java
-// Import from camera:
+// Import from camera with given output filename:
 capturandro.importImageFromCamera("savedCameraImage.jpg");
 
-// Import image from gallery
+// Import from camera, storing image with semi-random filename: [filenamePrefix] + System.currentTimeMillis() + ".jpg"
+capturandro.importImageFromCamera();
+
+// Import from gallery with given output filename:
 capturandro.importImageFromGallery("savedGalleryImage.jpg")
+
+// Import from gallery, storing image with semi-random filename: [filenamePrefix] + System.currentTimeMillis() + ".jpg"
+capturandro.importImageFromGallery()
 ```
 
-License
--------
+### Send/share intents
+Capturandro supports send/share intents, meaning that apps (e.g. Gallery) can share images with your app.
+But, you will have to do some job in your own app to make it work.
+
+In your AndroidManifest.xml, add the following to the activity that you want to handle the send intent:
+```xml
+<activity android:name=".SomeActivity">
+    <intent-filter>
+        <action android:name="android.intent.action.SEND"/>
+        <action android:name="android.intent.action.SEND_MULTIPLE"/>
+        <category android:name="android.intent.category.DEFAULT"/>
+        <data android:mimeType="image/*"/>
+    </intent-filter>
+</activity>
+```
+In addition you need to insert the following code in the onCreate(..) method of the activity, 
+passing the intent passed in to the activity:
+```java
+capturandro.handleImageIfSentFromGallery(getIntent());
+```
+
+## License
 
     Copyright 2013 FINN.no.
 
