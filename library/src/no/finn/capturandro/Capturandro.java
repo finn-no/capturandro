@@ -8,9 +8,7 @@ import android.net.Uri;
 import android.provider.MediaStore;
 
 import no.finn.capturandro.asynctask.DownloadPicasaImageAsyncTask;
-import no.finn.capturandro.callbacks.CameraCallback;
-import no.finn.capturandro.callbacks.PicasaCallback;
-import no.finn.capturandro.exception.CapturandroException;
+import no.finn.capturandro.callbacks.CapturandroCallback;
 import no.finn.capturandro.util.BitmapUtil;
 
 import java.io.File;
@@ -37,49 +35,37 @@ public class Capturandro {
             MediaStore.MediaColumns.DISPLAY_NAME
     };
 
-    // Added to make code more readable
-    private static final String[] NO_SELECTION_ARGS = null;
-    private static final String NO_SELECTION = null;
-    private static final String NO_SORT_ORDER = null;
-
-    private CameraCallback cameraCallback;
-    private PicasaCallback picasaCallback;
+    private CapturandroCallback capturandroCallback;
 
     private String filename;
-    private File storageDirectory;
+    private String filenamePrefix;
+    private File storageDirectoryPath;
     private Activity activity;
 
     public static class Builder {
-        private CameraCallback cameraCallback;
-        private PicasaCallback picasaCallback;
-        private String filename;
-        private File storageDirectory;
+        private CapturandroCallback capturandroCallback;
+        private String filenamePrefix;
+        private File storageDirectoryPath;
         private Activity activity;
 
         public Builder(Activity activity){
             this.activity = activity;
         }
 
-        public Builder withCameraCallback(CameraCallback cameraCallback){
-            this.cameraCallback = cameraCallback;
+        public Builder withCameraCallback(CapturandroCallback capturandroCallback){
+            this.capturandroCallback = capturandroCallback;
 
             return this;
         }
 
-        public Builder withPicasaCallback(PicasaCallback picasaCallback){
-            this.picasaCallback = picasaCallback;
+        public Builder withFilenamePrefix(String filenamePrefix){
+            this.filenamePrefix = filenamePrefix + "_";
 
             return this;
         }
 
-        public Builder withFilename(String filename){
-            this.filename = filename;
-
-            return this;
-        }
-
-        public Builder withStorageDirectory(File path){
-            this.storageDirectory = path;
+        public Builder withStorageDirectoryPath(File storageDirectoryPath){
+            this.storageDirectoryPath = storageDirectoryPath;
 
             return this;
         }
@@ -91,20 +77,26 @@ public class Capturandro {
 
     public Capturandro(Builder builder) {
         this.activity = builder.activity;
-        this.cameraCallback = builder.cameraCallback;
-        this.picasaCallback = builder.picasaCallback;
-        this.filename = builder.filename;
-        this.storageDirectory = builder.storageDirectory;
+        this.capturandroCallback = builder.capturandroCallback;
+        this.filenamePrefix = builder.filenamePrefix;
+        this.storageDirectoryPath = builder.storageDirectoryPath;
+    }
+
+    public void importImageFromCamera() {
+        importImageFromCamera(getUniqueFilename());
     }
 
     public void importImageFromCamera(String filename) {
         Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-        intent.putExtra(MediaStore.EXTRA_OUTPUT, Uri.fromFile(new File(getStorageDirectory(), filename)));
+        intent.putExtra(MediaStore.EXTRA_OUTPUT, Uri.fromFile(new File(getStorageDirectoryPath(), filename)));
         this.filename = filename;
 
         activity.startActivityForResult(intent, IMAGE_FROM_CAMERA_RESULT);
     }
 
+    public void importImageFromGallery(){
+        importImageFromGallery(getUniqueFilename());
+    }
     public void importImageFromGallery(String filename) {
         Intent intent = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
         this.filename = filename;
@@ -112,25 +104,23 @@ public class Capturandro {
     }
 
     public void onActivityResult(int reqCode, int resultCode, Intent intent) throws IllegalArgumentException {
-        if (cameraCallback == null){
-            throw new IllegalStateException("Unable to import image. Have you implemented CameraCallback?");
+        if (capturandroCallback == null){
+            throw new IllegalStateException("Unable to import image. Have you implemented CapturandroCallback?");
         }
 
         switch (reqCode) {
             case IMAGE_FROM_CAMERA_RESULT:
                 if (resultCode == Activity.RESULT_OK) {
                     if (filename != null){
-                        File fileToStore = new File(getStorageDirectory(), filename);
+                        File fileToStore = new File(getStorageDirectoryPath(), filename);
                         try {
                             fileToStore.createNewFile();
                         } catch (IOException e) {
-                            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
-                            cameraCallback.onImportFailure(e);
+                            capturandroCallback.onCameraImportFailure(e);
                         }
                         saveBitmap(filename, fileToStore, fileToStore);
                     } else {
-                        // Throw exception saying image couldnt be added. Or something. showImageCouldNotBeAddedDialog();
-                        cameraCallback.onImportFailure(new CapturandroException("Image could not be added"));
+                        capturandroCallback.onCameraImportFailure(new IllegalArgumentException("Image could not be added"));
                     }
                 }
 
@@ -143,7 +133,7 @@ public class Capturandro {
                 }
 
                 if (isUserAttemptingToAddVideo(selectedImage)){
-                    cameraCallback.onImportFailure(new CapturandroException("Video can't be added"));
+                    capturandroCallback.onCameraImportFailure(new IllegalArgumentException("Videos can't be added"));
                     break;
                 }
 
@@ -156,25 +146,25 @@ public class Capturandro {
     }
 
     private void saveBitmap(String imageFilename, File inFile, File outFile) {
-        // Store Exif information as it is not kept when image is copied
-        ExifInterface exifInterface = BitmapUtil.getExifFromFile(inFile);
-
         try {
+            // Store Exif information as it is not kept when image is copied
+            ExifInterface exifInterface = BitmapUtil.getExifFromFile(inFile);
+
             if (exifInterface != null){
                 BitmapUtil.resizeAndRotateAndSaveBitmapFile(inFile, outFile, exifInterface, STORED_IMAGE_WIDTH, STORED_IMAGE_HEIGHT);
             } else {
                 BitmapUtil.resizeAndSaveBitmapFile(outFile, STORED_IMAGE_WIDTH, STORED_IMAGE_HEIGHT);
             }
 
-            cameraCallback.onImportSuccess(imageFilename);
+            capturandroCallback.onCameraImportSuccess(imageFilename);
 
         } catch (IllegalArgumentException e) {
-            cameraCallback.onImportFailure(e);
+            capturandroCallback.onCameraImportFailure(e);
         }
     }
 
     private void handleImageFromGallery(Uri selectedImage, String filename) {
-        Cursor cursor = activity.getContentResolver().query(selectedImage, FILE_PATH_COLUMNS, NO_SELECTION, NO_SELECTION_ARGS, NO_SORT_ORDER);
+        Cursor cursor = activity.getContentResolver().query(selectedImage, FILE_PATH_COLUMNS, null, null, null);
 
         if (cursor != null) {
             cursor.moveToFirst();
@@ -191,9 +181,6 @@ public class Capturandro {
             fetchPicasaImage(selectedImage, filename);
         }
     }
-
-
-
 
     private boolean isPicasaAndroid2Image(Uri selectedImage) {
         return selectedImage != null && selectedImage.toString().length() > 0;
@@ -218,16 +205,16 @@ public class Capturandro {
     }
 
     private void fetchPicasaImage(Uri selectedImage, String filename) {
-        if (picasaCallback == null){
-            throw new IllegalStateException("Unable to import image. Have you implemented PicasaCallback?");
+        if (capturandroCallback == null){
+            throw new IllegalStateException("Unable to import image. Have you implemented CapturandroCallback?");
         }
 
-        new DownloadPicasaImageAsyncTask(activity, selectedImage, filename, picasaCallback).execute();
+        new DownloadPicasaImageAsyncTask(activity, selectedImage, filename, capturandroCallback).execute();
     }
 
 
     private void fetchLocalGalleryImageFile(String filename, Cursor cursor, int columnIndex) {
-        // Resize and save so that the image is still kept if the user deletes it from the Gallery
+        // Resize and save so that the image is still kept if the user deletes the original image from Gallery
         File inFile = new File(cursor.getString(columnIndex));
         File outFile = new File(activity.getExternalCacheDir(), filename);
 
@@ -247,24 +234,23 @@ public class Capturandro {
     public ArrayList<Uri> getImagesFromIntent(Intent intent) {
         ArrayList<Uri> imageUris = new ArrayList<Uri>();
         String action = intent.getAction();
+
         if (Intent.ACTION_SEND.equals(action)) {
             if (intent.hasExtra(Intent.EXTRA_STREAM)) {
                 imageUris.add((Uri) intent.getParcelableExtra(Intent.EXTRA_STREAM));
             }
-        }
-        else if (Intent.ACTION_SEND_MULTIPLE.equals(action)) {
+        } else if (Intent.ACTION_SEND_MULTIPLE.equals(action)) {
             if (intent.hasExtra(Intent.EXTRA_STREAM)) {
                 imageUris = intent.getParcelableArrayListExtra(Intent.EXTRA_STREAM);
             }
         }
+
         return imageUris;
     }
 
     private void handleSendImages(ArrayList<Uri> imagesFromIntent) {
-        for (Uri imageUri : imagesFromIntent){
-            String filename = System.currentTimeMillis() + ".jpg";
-
-            handleImageFromGallery(imageUri, filename);
+        for (Uri imageUri : imagesFromIntent){;
+            handleImageFromGallery(imageUri, getUniqueFilename());
         }
     }
 
@@ -275,11 +261,15 @@ public class Capturandro {
                 && (mimeType != null && mimeType.startsWith("image"));
     }
 
-    public File getStorageDirectory() {
-        if (storageDirectory == null){
+    private String getUniqueFilename() {
+        return filenamePrefix + System.currentTimeMillis() + ".jpg";
+    }
+
+    public File getStorageDirectoryPath() {
+        if (storageDirectoryPath == null || !storageDirectoryPath.equals("")){
             return activity.getExternalCacheDir();
         } else {
-            return storageDirectory;
+            return storageDirectoryPath;
         }
     }
 

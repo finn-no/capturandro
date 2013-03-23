@@ -11,13 +11,12 @@ import android.support.v4.view.ViewPager;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
-import no.finn.capturandro.callbacks.CameraCallback;
-import no.finn.capturandro.callbacks.PicasaCallback;
+import no.finn.capturandro.callbacks.CapturandroCallback;
 import no.finn.capturandro.Capturandro;
 
 import java.io.File;
 
-public class CapturandroSampleActivity extends Activity implements CameraCallback, PicasaCallback {
+public class CapturandroSampleActivity extends Activity implements CapturandroCallback {
     private Capturandro capturandro;
     private ProgressDialog progressDialog;
 
@@ -28,7 +27,6 @@ public class CapturandroSampleActivity extends Activity implements CameraCallbac
 
         capturandro = new Capturandro.Builder(this)
                                 .withCameraCallback(this)
-                                .withPicasaCallback(this)
                                 .build();
         capturandro.handleImageIfSentFromGallery(getIntent());
     }
@@ -47,7 +45,7 @@ public class CapturandroSampleActivity extends Activity implements CameraCallbac
     }
 
     @Override
-    public void onImportSuccess(String filename) {
+    public void onCameraImportSuccess(String filename) {
         showImageFile(filename);
     }
 
@@ -65,7 +63,7 @@ public class CapturandroSampleActivity extends Activity implements CameraCallbac
     }
 
     @Override
-    public void onImportFailure(Exception e) {
+    public void onCameraImportFailure(Exception e) {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setTitle(getString(R.string.dialog_title_error_importing_image))
             .setMessage(getString(R.string.dialog_message_error_importing_image))
@@ -73,13 +71,18 @@ public class CapturandroSampleActivity extends Activity implements CameraCallbac
     }
 
     @Override
-    public void onPicasaDownloadStarted(String filename) {
+    public void onPicasaImportStarted(String filename) {
         progressDialog = ProgressDialog.show(this, "Downloading", "Downloading image from Picasa...", true);
     }
 
     @Override
-    public void onPicasaDownloadComplete(String filename) {
+    public void onPicasaImportSuccess(String filename) {
         progressDialog.dismiss();
         showImageFile(filename);
+    }
+
+    @Override
+    public void onPicasaImportFailure(Exception e) {
+        //To change body of implemented methods use File | Settings | File Templates.
     }
 }

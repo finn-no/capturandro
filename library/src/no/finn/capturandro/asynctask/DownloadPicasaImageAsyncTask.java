@@ -4,22 +4,22 @@ import android.app.Activity;
 import android.content.ContentResolver;
 import android.net.Uri;
 import android.os.AsyncTask;
-import no.finn.capturandro.callbacks.PicasaCallback;
+import no.finn.capturandro.callbacks.CapturandroCallback;
 import org.apache.commons.io.IOUtils;
 
 import java.io.*;
 import java.net.MalformedURLException;
 import java.net.URL;
 
-public class DownloadPicasaImageAsyncTask extends AsyncTask<Void, Integer, PicasaCallback> {
+public class DownloadPicasaImageAsyncTask extends AsyncTask<Void, Integer, CapturandroCallback> {
 
-    private final PicasaCallback picasaCallback;
+    private final CapturandroCallback picasaCallback;
     protected Activity activity;
 
     private Uri uri;
     private String filename;
 
-    public DownloadPicasaImageAsyncTask(Activity activity, Uri imageToDownloadUri, String filename, PicasaCallback picasaCallback) {
+    public DownloadPicasaImageAsyncTask(Activity activity, Uri imageToDownloadUri, String filename, CapturandroCallback picasaCallback) {
         this.activity = activity;
         this.uri = imageToDownloadUri;
         this.filename = filename;
@@ -28,11 +28,11 @@ public class DownloadPicasaImageAsyncTask extends AsyncTask<Void, Integer, Picas
 
     @Override
     protected void onPreExecute(){
-        picasaCallback.onPicasaDownloadStarted(filename);
+        picasaCallback.onPicasaImportStarted(filename);
     }
 
     @Override
-    protected PicasaCallback doInBackground(Void... voids) {
+    protected CapturandroCallback doInBackground(Void... voids) {
         File file = new File(activity.getExternalCacheDir(), filename);
         OutputStream outputStream = null;
         InputStream inputStream = null;
@@ -52,11 +52,11 @@ public class DownloadPicasaImageAsyncTask extends AsyncTask<Void, Integer, Picas
             outputStream = new FileOutputStream(file);
             IOUtils.copy(inputStream, outputStream);
         } catch (MalformedURLException e) {
-            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+            e.printStackTrace();  // TODO
         } catch (FileNotFoundException e) {
-            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+            e.printStackTrace();  // TODO
         } catch (IOException e) {
-            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+            e.printStackTrace();  // TODO
         } finally {
             IOUtils.closeQuietly(outputStream);
             IOUtils.closeQuietly(inputStream);
@@ -66,7 +66,7 @@ public class DownloadPicasaImageAsyncTask extends AsyncTask<Void, Integer, Picas
     }
 
     @Override
-    protected void onPostExecute(PicasaCallback picasaCallback){
-        picasaCallback.onPicasaDownloadComplete(filename);
+    protected void onPostExecute(CapturandroCallback callback){
+        callback.onPicasaImportSuccess(filename);
     }
 }
