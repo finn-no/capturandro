@@ -1,7 +1,8 @@
 # Capturandro
 
 
-Warning: While this is a working project, it is still work in progress, and we don't recommend using it in production.
+Warning: While this is a working project, it is still work in progress, and we don't recommend using it in production
+just yet.
 
 ## About
 Capturandro is an easy-to-use image import library for Android.
