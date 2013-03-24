@@ -18,14 +18,27 @@ Capturandro is an easy-to-use image import library for Android.
 Use Capturandro.Builder() to create an instance of Capturandro and set parameters:
 ```java
 Capturandro capturandro = Capturandro.Builder()
-        .withCameraCallback(someCameraCallback) // See documentation below
-        .withPicasaCallback(somePicasaCallback) // See documentation below
+        .withCapturandroCallback(yourCapturandroCallback) // See documentation below
         .withStorageDirectoryPath("/path/to/some/storage/dir"); // Discouraged! App uses getExternalCacheDir() by default
         .withFilenamePrefix("capturandro") // Prefixed filenames with "capturandro_", e.g. "capturandro_001.jpg"
         .build();
 ```
 
-### Callbacks
+### CapturandroCallback
+In order for Capturandro to function, you need to implement CapturandroCallback in your application. This class describes
+methods that will be called when you initiate an image import:
+```java
+    void onCameraImportSuccess(String filename);
+    void onCameraImportFailure(Exception e);
+
+    // Called when user has selected a Picasa image from gallery. If you want to show a progress indicator, this is the place to start it
+    void onPicasaImportStarted(String filename);  
+    
+    // ...and this is the place to hide it once the import is done 
+    void onPicasaImportSuccess(String filename);    
+    void onPicasaImportFailure(Exception e);
+```
+
 Implement CameraCallback and/or PicasaCallback in your Activity. CameraCallback will be called if adding an image has
 succeeded or failed. In CameraCallback.onImportSuccess(String filename) is the place where you would put code to
 show the image in your application. CameraCallback.onImportFailure(Exception e) contains information if something has
@@ -73,7 +86,7 @@ capturandro.handleImageIfSentFromGallery(getIntent());
 
 ## License
 
-    Copyright 2013 FINN.no.
+    Copyright (C) 2013 FINN.no.
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
