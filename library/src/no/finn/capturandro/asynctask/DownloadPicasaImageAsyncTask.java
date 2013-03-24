@@ -13,22 +13,22 @@ import java.net.URL;
 
 public class DownloadPicasaImageAsyncTask extends AsyncTask<Void, Integer, CapturandroCallback> {
 
-    private final CapturandroCallback picasaCallback;
+    private final CapturandroCallback capturandroCallback;
     protected Activity activity;
 
     private Uri uri;
     private String filename;
 
-    public DownloadPicasaImageAsyncTask(Activity activity, Uri imageToDownloadUri, String filename, CapturandroCallback picasaCallback) {
+    public DownloadPicasaImageAsyncTask(Activity activity, Uri imageToDownloadUri, String filename, CapturandroCallback capturandroCallback) {
         this.activity = activity;
         this.uri = imageToDownloadUri;
         this.filename = filename;
-        this.picasaCallback = picasaCallback;
+        this.capturandroCallback = capturandroCallback;
     }
 
     @Override
     protected void onPreExecute(){
-        picasaCallback.onPicasaImportStarted(filename);
+        capturandroCallback.onPicasaImportStarted(filename);
     }
 
     @Override
@@ -52,17 +52,17 @@ public class DownloadPicasaImageAsyncTask extends AsyncTask<Void, Integer, Captu
             outputStream = new FileOutputStream(file);
             IOUtils.copy(inputStream, outputStream);
         } catch (MalformedURLException e) {
-            e.printStackTrace();  // TODO
+            capturandroCallback.onPicasaImportFailure(e);
         } catch (FileNotFoundException e) {
-            e.printStackTrace();  // TODO
+            capturandroCallback.onPicasaImportFailure(e);
         } catch (IOException e) {
-            e.printStackTrace();  // TODO
+            capturandroCallback.onPicasaImportFailure(e);
         } finally {
             IOUtils.closeQuietly(outputStream);
             IOUtils.closeQuietly(inputStream);
         }
 
-        return picasaCallback;
+        return capturandroCallback;
     }
 
     @Override

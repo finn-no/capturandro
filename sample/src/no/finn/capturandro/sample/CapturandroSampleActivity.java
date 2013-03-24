@@ -11,6 +11,7 @@ import android.support.v4.view.ViewPager;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.Toast;
 import no.finn.capturandro.callbacks.CapturandroCallback;
 import no.finn.capturandro.Capturandro;
 
@@ -83,6 +84,7 @@ public class CapturandroSampleActivity extends Activity implements CapturandroCa
 
     @Override
     public void onPicasaImportFailure(Exception e) {
-        //To change body of implemented methods use File | Settings | File Templates.
+        progressDialog.dismiss();
+        Toast.makeText(this, "Import of image(s) from Picasa failed", Toast.LENGTH_LONG).show();
     }
 }
