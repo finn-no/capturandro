@@ -1,7 +1,8 @@
 # Capturandro
 
 
-Warning: While this is a working project, it is still work in progress, and we don't recommend using it in production.
+Warning: While this is a working project, it is still work in progress, and we don't recommend using it in production
+just yet.
 
 ## About
 Capturandro is an easy-to-use image import library for Android.
@@ -18,20 +19,27 @@ Capturandro is an easy-to-use image import library for Android.
 Use Capturandro.Builder() to create an instance of Capturandro and set parameters:
 ```java
 Capturandro capturandro = Capturandro.Builder()
-        .withCameraCallback(someCameraCallback) // See documentation below
-        .withPicasaCallback(somePicasaCallback) // See documentation below
+        .withCapturandroCallback(yourCapturandroCallback) // See documentation below
         .withStorageDirectoryPath("/path/to/some/storage/dir"); // Discouraged! App uses getExternalCacheDir() by default
         .withFilenamePrefix("capturandro") // Prefixed filenames with "capturandro_", e.g. "capturandro_001.jpg"
         .build();
 ```
 
-### Callbacks
-Implement CameraCallback and/or PicasaCallback in your Activity. CameraCallback will be called if adding an image has
-succeeded or failed. In CameraCallback.onImportSuccess(String filename) is the place where you would put code to
-show the image in your application. CameraCallback.onImportFailure(Exception e) contains information if something has
-failed during the import. Use PicasaCallback.onPicasaImportStarted(String filename) is called when a Picasa image has started
-downloading, and PicasaCallback.onPicasaImportCompleted(String filename).
+### CapturandroCallback
+In order for Capturandro to function, you need to implement CapturandroCallback in your application. This class describes
+methods that will be called when you initiate an image import:
+```java
+    void onCameraImportSuccess(String filename);
+    void onCameraImportFailure(Exception e);
 
+    // Called when user has selected a Picasa image from gallery. If you want to show a progress indicator, 
+    // this is the place to show it to the user.
+    void onPicasaImportStarted(String filename);  
+    
+    // ...and this is the where you should hide it
+    void onPicasaImportSuccess(String filename);    
+    void onPicasaImportFailure(Exception e);
+```
 
 ### Image import
 Give you instance is named capturandro, imports can be done as follows:
@@ -71,9 +79,16 @@ passing the intent passed in to the activity:
 capturandro.handleImageIfSentFromGallery(getIntent());
 ```
 
+### Update your AndroidManifest.xml
+Make sure to have the following permission lines in your AndroidManifest.xml
+```xml
+<uses-permission android:name="android.permission.INTERNET" />
+<uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+```
+
 ## License
 
-    Copyright 2013 FINN.no.
+    Copyright (C) 2013 FINN.no.
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
