@@ -78,6 +78,13 @@ passing the intent passed in to the activity:
 capturandro.handleImageIfSentFromGallery(getIntent());
 ```
 
+### Update your AndroidManifest.xml
+Make sure to have the following permission lines in your AndroidManifest.xml
+```xml
+<uses-permission android:name="android.permission.INTERNET" />
+<uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+```
+
 ## License
 
     Copyright (C) 2013 FINN.no.
