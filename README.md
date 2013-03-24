@@ -31,20 +31,14 @@ methods that will be called when you initiate an image import:
     void onCameraImportSuccess(String filename);
     void onCameraImportFailure(Exception e);
 
-    // Called when user has selected a Picasa image from gallery. If you want to show a progress indicator, this is the place to start it
+    // Called when user has selected a Picasa image from gallery. If you want to show a progress indicator, 
+    // this is the place to show it to the user.
     void onPicasaImportStarted(String filename);  
     
-    // ...and this is the place to hide it once the import is done 
+    // ...and this is the where you should hide it
     void onPicasaImportSuccess(String filename);    
     void onPicasaImportFailure(Exception e);
 ```
-
-Implement CameraCallback and/or PicasaCallback in your Activity. CameraCallback will be called if adding an image has
-succeeded or failed. In CameraCallback.onImportSuccess(String filename) is the place where you would put code to
-show the image in your application. CameraCallback.onImportFailure(Exception e) contains information if something has
-failed during the import. Use PicasaCallback.onPicasaImportStarted(String filename) is called when a Picasa image has started
-downloading, and PicasaCallback.onPicasaImportCompleted(String filename).
-
 
 ### Image import
 Give you instance is named capturandro, imports can be done as follows:
