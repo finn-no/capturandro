@@ -28,7 +28,7 @@ public class DownloadPicasaImageAsyncTask extends AsyncTask<Void, Integer, Captu
 
     @Override
     protected void onPreExecute(){
-        capturandroCallback.onPicasaImportStarted(filename);
+        capturandroCallback.onPicasaImportStarted(this, filename);
     }
 
     @Override
