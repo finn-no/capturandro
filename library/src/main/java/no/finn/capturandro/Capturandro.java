@@ -261,7 +261,7 @@ public class Capturandro {
                 && (mimeType != null && mimeType.startsWith("image"));
     }
 
-    private void setActivity(Activity activity){
+    public void setActivity(Activity activity){
         this.activity = activity;
     }
 
