@@ -18,7 +18,7 @@ Capturandro is an easy-to-use image import library for Android.
 ### Capturandro.Builder()
 Use Capturandro.Builder() to create an instance of Capturandro and set parameters:
 ```java
-Capturandro capturandro = Capturandro.Builder()
+Capturandro capturandro = new Capturandro.Builder()
         .withCapturandroCallback(yourCapturandroCallback) // See documentation below
         .withStorageDirectoryPath("/path/to/some/storage/dir"); // Discouraged! App uses getExternalCacheDir() by default
         .withFilenamePrefix("capturandro") // Prefixed filenames with "capturandro_", e.g. "capturandro_001.jpg"
