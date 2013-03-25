@@ -261,6 +261,10 @@ public class Capturandro {
                 && (mimeType != null && mimeType.startsWith("image"));
     }
 
+    private void setActivity(Activity activity){
+        this.activity = activity;
+    }
+
     private String getUniqueFilename() {
         return filenamePrefix + System.currentTimeMillis() + ".jpg";
     }
