@@ -35,12 +35,12 @@ public class Capturandro {
             MediaStore.MediaColumns.DISPLAY_NAME
     };
 
-    private CapturandroCallback capturandroCallback;
+    private Activity activity;
 
     private String filename;
     private String filenamePrefix;
     private File storageDirectoryPath;
-    private Activity activity;
+    private CapturandroCallback capturandroCallback;
 
     public static class Builder {
         private CapturandroCallback capturandroCallback;
@@ -261,10 +261,9 @@ public class Capturandro {
                 && (mimeType != null && mimeType.startsWith("image"));
     }
 
-    public void setActivity(Activity activity){
-        this.activity = activity;
+    public void setCapturandroCallback(CapturandroCallback capturandroCallback){
+        this.capturandroCallback = capturandroCallback;
     }
-
     private String getUniqueFilename() {
         return filenamePrefix + System.currentTimeMillis() + ".jpg";
     }
