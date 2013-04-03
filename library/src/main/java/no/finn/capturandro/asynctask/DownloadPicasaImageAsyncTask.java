@@ -1,13 +1,21 @@
 package no.finn.capturandro.asynctask;
 
 import android.content.Context;
+import android.media.ExifInterface;
 import android.net.Uri;
 import android.os.AsyncTask;
+
+import no.finn.capturandro.Config;
 import no.finn.capturandro.callbacks.CapturandroCallback;
+import no.finn.capturandro.util.BitmapUtil;
+
 import org.apache.commons.io.IOUtils;
 
 import java.io.*;
 import java.net.URL;
+
+import static no.finn.capturandro.Config.STORED_IMAGE_HEIGHT;
+import static no.finn.capturandro.Config.STORED_IMAGE_WIDTH;
 
 public class DownloadPicasaImageAsyncTask extends AsyncTask<Void, Integer, CapturandroCallback> {
 
@@ -48,6 +56,13 @@ public class DownloadPicasaImageAsyncTask extends AsyncTask<Void, Integer, Captu
         } finally {
             IOUtils.closeQuietly(outputStream);
             IOUtils.closeQuietly(inputStream);
+        }
+
+        ExifInterface exifInterface = BitmapUtil.getExifFromFile(file);
+        if (exifInterface != null) {
+            BitmapUtil.resizeAndRotateAndSaveBitmapFile(file, file, exifInterface, STORED_IMAGE_WIDTH, STORED_IMAGE_HEIGHT);
+        } else {
+            BitmapUtil.resizeAndSaveBitmapFile(file, file, STORED_IMAGE_WIDTH, STORED_IMAGE_HEIGHT);
         }
 
         return capturandroCallback;
