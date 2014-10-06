@@ -4,5 +4,5 @@
     <string name="add_from_camera">Add image from camera</string>
     <string name="add_from_gallery">Add image from gallery</string>
     <string name="dialog_title_error_importing_image">Error importing image</string>
-    <string name="dialog_message_error_importing_image">An error occured while importing image</string>
+    <string name="dialog_message_error_importing_image">An error occurred while importing image</string>
 </resources>

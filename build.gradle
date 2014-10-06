@@ -1,0 +1,26 @@
+allprojects {
+    group = 'no.finn'
+    version = '0.0.2-SNAPSHOT'
+}
+
+subprojects {
+    buildscript {
+        repositories {
+            mavenCentral()
+        }
+        dependencies {
+            classpath 'com.android.tools.build:gradle:0.13.0'
+
+            //Testing/Non code stuff (can use +):
+            classpath 'com.jakewharton.sdkmanager:gradle-plugin:0.12.+'
+        }
+    }
+
+    repositories {
+        mavenLocal()
+        mavenCentral()
+
+        maven { url "http://repo.maven.apache.org/maven2" }
+    }
+
+}

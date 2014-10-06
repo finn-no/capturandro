@@ -1,0 +1,23 @@
+description = 'Capturandro Sample'
+
+apply plugin: 'com.android.application'
+
+dependencies {
+    compile project(':capturandro')
+    compile('com.android.support:support-v13:20.0.0')
+}
+
+android {
+    compileSdkVersion 19
+    buildToolsVersion "20.0.0"
+
+    android {
+        sourceSets {
+            main {
+                res.srcDirs = ['res']
+                assets.srcDirs = ['assets']
+            }
+        }
+    }
+
+}

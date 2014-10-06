@@ -13,6 +13,10 @@ bin/
 gen/
 */target
 
+# Gradle files
+build/
+.gradle
+
 # Local configuration file (sdk path, etc)
 local.properties
 

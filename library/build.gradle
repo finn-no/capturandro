@@ -1,0 +1,20 @@
+description = 'Capturandro'
+
+apply plugin: 'com.android.library'
+
+dependencies {
+    compile group: 'commons-io', name: 'commons-io', version: '2.2'
+}
+
+android {
+    compileSdkVersion 19
+    buildToolsVersion "20.0.0"
+
+    packagingOptions {
+        exclude 'AndroidManifest.xml'
+    }
+
+}
+
+
+

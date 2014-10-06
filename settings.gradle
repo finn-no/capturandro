@@ -1,0 +1,6 @@
+rootProject.name = 'capturandro-parent'
+include ':capturandro'
+include ':capturandro-sample'
+
+project(':capturandro').projectDir = "$rootDir/library" as File
+project(':capturandro-sample').projectDir = "$rootDir/sample" as File
