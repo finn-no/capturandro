@@ -1,6 +1,6 @@
-package no.finn.capturandro.callbacks;
+package no.finntech.capturandro.callbacks;
 
-import no.finn.capturandro.asynctask.DownloadPicasaImageAsyncTask;
+import no.finntech.capturandro.asynctask.DownloadPicasaImageAsyncTask;
 
 public interface CapturandroCallback {
     void onCameraImportSuccess(String filename);

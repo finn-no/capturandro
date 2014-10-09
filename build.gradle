@@ -1,5 +1,5 @@
 allprojects {
-    group = 'no.finn'
+    group = 'no.finntech'
     version = '0.0.2-SNAPSHOT'
 }
 

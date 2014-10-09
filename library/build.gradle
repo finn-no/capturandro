@@ -1,9 +1,10 @@
 description = 'Capturandro'
 
 apply plugin: 'com.android.library'
+apply plugin: 'maven'
 
 dependencies {
-    compile group: 'commons-io', name: 'commons-io', version: '2.2'
+    compile('commons-io:commons-io:2.2')
 }
 
 android {
@@ -13,8 +14,20 @@ android {
     packagingOptions {
         exclude 'AndroidManifest.xml'
     }
-
 }
 
+uploadArchives {
+    repositories {
+        mavenDeployer {
+            if (project.version.endsWith('-SNAPSHOT')) {
+                repository(url: "http://mavenproxy.finntech.no/finntech-internal-snapshot")
+            } else {
+                repository(url: "http://mavenproxy.finntech.no/finntech-internal-release")
+            }
+            pom.groupId = 'no.finntech'
+            pom.artifactId = 'capturandro'
+            pom.version = '0.2-SNAPSHOT'
 
-
+        }
+    }
+}

@@ -1,4 +1,4 @@
-package no.finn.capturandro.util;
+package no.finntech.capturandro.util;
 
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -6,7 +6,7 @@ import android.graphics.Matrix;
 import android.media.ExifInterface;
 import android.net.Uri;
 
-import no.finn.capturandro.Config;
+import no.finntech.capturandro.Config;
 import org.apache.commons.io.IOUtils;
 
 import java.io.*;

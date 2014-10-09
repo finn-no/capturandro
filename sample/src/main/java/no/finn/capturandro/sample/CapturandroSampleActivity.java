@@ -1,4 +1,4 @@
-package no.finn.capturandro.sample;
+package no.finntech.capturandro.sample;
 
 import android.app.Activity;
 import android.app.AlertDialog;
@@ -12,9 +12,9 @@ import android.view.View;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.Toast;
-import no.finn.capturandro.asynctask.DownloadPicasaImageAsyncTask;
-import no.finn.capturandro.callbacks.CapturandroCallback;
-import no.finn.capturandro.Capturandro;
+import no.finntech.capturandro.asynctask.DownloadPicasaImageAsyncTask;
+import no.finntech.capturandro.callbacks.CapturandroCallback;
+import no.finntech.capturandro.Capturandro;
 
 import java.io.File;
 

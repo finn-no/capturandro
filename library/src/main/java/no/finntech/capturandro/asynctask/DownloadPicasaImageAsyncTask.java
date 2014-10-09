@@ -1,21 +1,24 @@
-package no.finn.capturandro.asynctask;
+package no.finntech.capturandro.asynctask;
 
 import android.content.Context;
 import android.media.ExifInterface;
 import android.net.Uri;
 import android.os.AsyncTask;
 
-import no.finn.capturandro.Config;
-import no.finn.capturandro.callbacks.CapturandroCallback;
-import no.finn.capturandro.util.BitmapUtil;
+import no.finntech.capturandro.callbacks.CapturandroCallback;
+import no.finntech.capturandro.util.BitmapUtil;
 
 import org.apache.commons.io.IOUtils;
 
-import java.io.*;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.net.URL;
 
-import static no.finn.capturandro.Config.STORED_IMAGE_HEIGHT;
-import static no.finn.capturandro.Config.STORED_IMAGE_WIDTH;
+import static no.finntech.capturandro.Config.STORED_IMAGE_HEIGHT;
+import static no.finntech.capturandro.Config.STORED_IMAGE_WIDTH;
 
 public class DownloadPicasaImageAsyncTask extends AsyncTask<Void, Integer, CapturandroCallback> {
 
