@@ -4,7 +4,6 @@ apply plugin: 'com.android.application'
 
 dependencies {
     compile project(':capturandro')
-    compile('com.android.support:support-v13:20.0.0')
 }
 
 android {
@@ -15,7 +14,6 @@ android {
         sourceSets {
             main {
                 res.srcDirs = ['res']
-                assets.srcDirs = ['assets']
             }
         }
     }

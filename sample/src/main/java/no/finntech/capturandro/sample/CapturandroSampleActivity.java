@@ -7,18 +7,22 @@ import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Bundle;
-import android.support.v4.view.ViewPager;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.Toast;
-import no.finntech.capturandro.asynctask.DownloadPicasaImageAsyncTask;
-import no.finntech.capturandro.callbacks.CapturandroCallback;
-import no.finntech.capturandro.Capturandro;
 
 import java.io.File;
 
+import no.finntech.capturandro.Capturandro;
+import no.finntech.capturandro.asynctask.DownloadPicasaImageAsyncTask;
+import no.finntech.capturandro.callbacks.CapturandroCallback;
+
 public class CapturandroSampleActivity extends Activity implements CapturandroCallback {
+    private static final int CAMERA_RESULT_CODE = 1;
+    private static final int GALLERY_RESULT_CODE = 2;
+
     private Capturandro capturandro;
     private ProgressDialog progressDialog;
 
@@ -28,21 +32,23 @@ public class CapturandroSampleActivity extends Activity implements CapturandroCa
         setContentView(R.layout.main);
 
         capturandro = new Capturandro.Builder(this)
-                                .withCameraCallback(this)
-                                .build();
+                .withCameraCallback(this)
+                .withCameraIntentResultCode(CAMERA_RESULT_CODE)
+                .withGalleryIntentResultCode(GALLERY_RESULT_CODE)
+                .build();
         capturandro.handleImageIfSentFromGallery(getIntent());
     }
 
-    public void addFromCameraClick(View v){
+    public void addFromCameraClick(View v) {
         capturandro.importImageFromCamera("camera_image.jpg");
     }
 
-    public void addFromGalleryClick(View v){
+    public void addFromGalleryClick(View v) {
         capturandro.importImageFromGallery("gallery_image.jpg");
     }
 
     @Override
-    public void onActivityResult(int requestCode, int resultCode, Intent data){
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
         capturandro.onActivityResult(requestCode, resultCode, data);
     }
 
@@ -55,12 +61,13 @@ public class CapturandroSampleActivity extends Activity implements CapturandroCa
 
         File imageFile = new File(getExternalCacheDir(), filename);
 
-        if (imageFile.exists()){
+        if (imageFile.exists()) {
             Bitmap bitmap = BitmapFactory.decodeFile(imageFile.getAbsolutePath());
             ImageView imageView = new ImageView(this);
             imageView.setImageBitmap(bitmap);
-            imageView.setLayoutParams(new ViewPager.LayoutParams());
-            ((LinearLayout)findViewById(R.id.view_pager_images)).addView(imageView);
+            imageView.setLayoutParams(new ViewGroup.LayoutParams(
+                    ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+            ((LinearLayout) findViewById(R.id.image_list)).addView(imageView);
         }
     }
 
@@ -68,8 +75,8 @@ public class CapturandroSampleActivity extends Activity implements CapturandroCa
     public void onCameraImportFailure(Exception e) {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setTitle(getString(R.string.dialog_title_error_importing_image))
-            .setMessage(getString(R.string.dialog_message_error_importing_image))
-            .create();
+                .setMessage(getString(R.string.dialog_message_error_importing_image))
+                .create();
     }
 
     @Override
