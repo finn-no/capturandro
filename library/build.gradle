@@ -24,9 +24,9 @@ uploadArchives {
             } else {
                 repository(url: "http://mavenproxy.finntech.no/finntech-internal-release")
             }
-            pom.groupId = 'no.finntech'
+            pom.groupId = project.group
             pom.artifactId = 'capturandro'
-            pom.version = '0.2-SNAPSHOT'
+            pom.version = project.version
 
         }
     }
