@@ -9,7 +9,13 @@ import android.net.Uri;
 import no.finntech.capturandro.Config;
 import org.apache.commons.io.IOUtils;
 
-import java.io.*;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.net.URL;
 
 public class BitmapUtil {
@@ -143,8 +149,6 @@ public class BitmapUtil {
     }
 
     public static ExifInterface getExifFromFile(File file) {
-        ExifInterface exif;
-
         try {
             return new ExifInterface(file.getPath());
         } catch (IOException e) {

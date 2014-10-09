@@ -58,7 +58,6 @@ public class CapturandroSampleActivity extends Activity implements CapturandroCa
     }
 
     private void showImageFile(String filename) {
-
         File imageFile = new File(getExternalCacheDir(), filename);
 
         if (imageFile.exists()) {

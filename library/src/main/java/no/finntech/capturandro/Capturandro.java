@@ -32,14 +32,13 @@ public class Capturandro {
             MediaStore.MediaColumns.DISPLAY_NAME
     };
 
-    private Activity activity;
-
-    private String filename;
-    private String filenamePrefix;
-    private File storageDirectoryPath;
-    private CapturandroCallback capturandroCallback;
+    private final Activity activity;
+    private final String filenamePrefix;
+    private final File storageDirectoryPath;
     private final int galleryIntentResultCode;
     private final int cameraIntentResultCode;
+    private CapturandroCallback capturandroCallback;
+    private String filename;
 
     public static class Builder {
         private CapturandroCallback capturandroCallback;
