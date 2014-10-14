@@ -24,7 +24,8 @@ public class Capturandro {
             "content://com.android.gallery3d.provider",
             "content://com.google.android.gallery3d",
             "content://com.android.sec.gallery3d",
-            "content://com.sec.android.gallery3d"
+            "content://com.sec.android.gallery3d",
+            "content://com.google.android.apps.photos"
     };
 
     private final static String[] FILE_PATH_COLUMNS = {
@@ -182,13 +183,7 @@ public class Capturandro {
             }
 
             cursor.close();
-        } else if (isPicasaAndroid2Image(selectedImage)) {
-            fetchPicasaImage(selectedImage, filename);
         }
-    }
-
-    private boolean isPicasaAndroid2Image(Uri selectedImage) {
-        return selectedImage != null && selectedImage.toString().length() > 0;
     }
 
     private boolean isPicasaAndroid3Image(Uri selectedImage) {
@@ -221,6 +216,9 @@ public class Capturandro {
     private void fetchLocalGalleryImageFile(String filename, Cursor cursor, int columnIndex) {
         // Resize and save so that the image is still kept if the user deletes the original image from Gallery
         File inFile = new File(cursor.getString(columnIndex));
+        if (filename == null) {
+            filename = getUniqueFilename();
+        }
         File outFile = new File(activity.getExternalCacheDir(), filename);
 
         saveBitmap(filename, inFile, outFile);

@@ -4,9 +4,7 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Matrix;
 import android.media.ExifInterface;
-import android.net.Uri;
 
-import no.finntech.capturandro.Config;
 import org.apache.commons.io.IOUtils;
 
 import java.io.File;
@@ -14,13 +12,13 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.net.URL;
+
+import no.finntech.capturandro.Config;
 
 public class BitmapUtil {
 
-    private BitmapUtil(){}
+    private BitmapUtil() {
+    }
 
     // Courtesy of Fedor / Thomas Vervest
     // (http://stackoverflow.com/questions/477572/android-strange-out-of-memory-issue-while-loading-an-image-to-a-bitmap-object/823966#823966)
@@ -58,23 +56,14 @@ public class BitmapUtil {
         saveBitmap(bitmap, fileToResizeAndSave);
     }
 
-    public static void resizeAndSaveBitmapFile(File fileToResizeAndSave, int reqWidth, int reqHeight, int compressionPercentage) throws IllegalArgumentException {
-        Bitmap bitmap = decodeBitmap(fileToResizeAndSave, reqWidth, reqHeight);
-        saveBitmap(bitmap, fileToResizeAndSave, compressionPercentage);
-    }
-
     public static void resizeAndSaveBitmapFile(File inFile, File outFile, int reqWidth, int reqHeight) throws IllegalArgumentException {
         Bitmap bitmap = decodeBitmap(inFile, reqWidth, reqHeight);
         saveBitmap(bitmap, outFile);
     }
 
-
     public static void saveBitmap(Bitmap bitmap, File filenameToSave) throws IllegalArgumentException {
-        saveBitmap(bitmap, filenameToSave, Config.DEFAULT_STORED_IMAGE_COMPRESSION_PERCENT);
-    }
-
-    public static void saveBitmap(Bitmap bitmap, File filenameToSave, int compressionPercentage) throws IllegalArgumentException {
         FileOutputStream out = null;
+        int compressionPercentage = Config.DEFAULT_STORED_IMAGE_COMPRESSION_PERCENT;
         try {
             out = new FileOutputStream(filenameToSave);
             bitmap.compress(Bitmap.CompressFormat.JPEG, compressionPercentage, out);
@@ -114,7 +103,7 @@ public class BitmapUtil {
 
         int orientation = exif.getAttributeInt(ExifInterface.TAG_ORIENTATION, 1);
 
-        switch (orientation){
+        switch (orientation) {
             case 0:
                 break;
             case 3:
@@ -131,7 +120,7 @@ public class BitmapUtil {
                 break;
         }
 
-        if (orientation != 0){
+        if (orientation != 0) {
             Matrix transformationMatrix = new Matrix();
             transformationMatrix.postRotate(orientation);
 
@@ -154,23 +143,6 @@ public class BitmapUtil {
         } catch (IOException e) {
             throw new RuntimeException(e); // TODO: Handle better
         }
-    }
-
-    public static Bitmap fetchBitmap(Uri uri, File fileToSave, int compressionPercentage) throws IOException {
-        OutputStream outputStream = null;
-        InputStream inputStream = null;
-        try {
-            inputStream = new URL(uri.toString()).openStream();
-            outputStream = new FileOutputStream(fileToSave);
-            IOUtils.copy(inputStream, outputStream);
-        } finally {
-            IOUtils.closeQuietly(outputStream);
-            IOUtils.closeQuietly(inputStream);
-        }
-
-        BitmapUtil.resizeAndSaveBitmapFile(fileToSave, Config.STORED_IMAGE_WIDTH, Config.STORED_IMAGE_HEIGHT, compressionPercentage);
-
-        return BitmapUtil.decodeBitmap(fileToSave, 400, 400);
     }
 
 }
