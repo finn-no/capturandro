@@ -176,7 +176,7 @@ public class Capturandro {
             cursor.moveToFirst();
             int columnIndex = cursor.getColumnIndex(MediaStore.MediaColumns.DATA);
 
-            if (isPicasaAndroid3Image(selectedImage)) {
+            if (isPicasaAndroid3Image(selectedImage) || imageIsRemote(cursor)) {
                 fetchPicasaAndroid3Image(selectedImage, filename, cursor);
             } else {
                 fetchLocalGalleryImageFile(filename, cursor, columnIndex);
@@ -187,12 +187,19 @@ public class Capturandro {
     }
 
     private boolean isPicasaAndroid3Image(Uri selectedImage) {
-        for (int i = 0; i < PICASA_CONTENT_PROVIDERS.length; i++) {
-            if (selectedImage.toString().startsWith(PICASA_CONTENT_PROVIDERS[i])) {
+        for (String picasaContentProvider : PICASA_CONTENT_PROVIDERS) {
+            if (selectedImage.toString().startsWith(picasaContentProvider)) {
                 return true;
             }
         }
+        return false;
+    }
 
+    private boolean imageIsRemote(Cursor cursor) {
+        int columnIndex = cursor.getColumnIndex(MediaStore.MediaColumns.DISPLAY_NAME);
+        if (columnIndex != -1 && (cursor.getString(columnIndex).startsWith("http://") )) {
+            return true;
+        }
         return false;
     }
 
