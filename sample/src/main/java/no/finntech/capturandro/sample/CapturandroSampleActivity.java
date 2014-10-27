@@ -31,7 +31,7 @@ public class CapturandroSampleActivity extends Activity implements CapturandroCa
         super.onCreate(savedInstanceState);
         setContentView(R.layout.main);
 
-        capturandro = new Capturandro.Builder(this)
+            capturandro = new Capturandro.Builder(this)
                 .withCameraCallback(this)
                 .withCameraIntentResultCode(CAMERA_RESULT_CODE)
                 .withGalleryIntentResultCode(GALLERY_RESULT_CODE)
@@ -40,11 +40,11 @@ public class CapturandroSampleActivity extends Activity implements CapturandroCa
     }
 
     public void addFromCameraClick(View v) {
-        capturandro.importImageFromCamera("camera_image.jpg");
+        capturandro.importImageFromCamera(this, "camera_image.jpg");
     }
 
     public void addFromGalleryClick(View v) {
-        capturandro.importImageFromGallery("gallery_image.jpg");
+        capturandro.importImageFromGallery(this, "gallery_image.jpg");
     }
 
     @Override

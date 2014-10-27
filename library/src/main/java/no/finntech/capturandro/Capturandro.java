@@ -1,6 +1,7 @@
 package no.finntech.capturandro;
 
 import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
 import android.media.ExifInterface;
@@ -33,11 +34,11 @@ public class Capturandro {
             MediaStore.MediaColumns.DISPLAY_NAME
     };
 
-    private final Activity activity;
     private final String filenamePrefix;
     private final File storageDirectoryPath;
     private final int galleryIntentResultCode;
     private final int cameraIntentResultCode;
+    private final Context context;
     private CapturandroCallback capturandroCallback;
     private String filename;
 
@@ -45,12 +46,12 @@ public class Capturandro {
         private CapturandroCallback capturandroCallback;
         private String filenamePrefix;
         private File storageDirectoryPath;
-        private Activity activity;
+        private Context context;
         private int galleryIntentResultCode;
         private int cameraIntentResultCode;
 
-        public Builder(Activity activity) {
-            this.activity = activity;
+        public Builder(Context context) {
+            this.context = context;
         }
 
         public Builder withCameraCallback(CapturandroCallback capturandroCallback) {
@@ -84,7 +85,7 @@ public class Capturandro {
     }
 
     public Capturandro(Builder builder) {
-        this.activity = builder.activity;
+        this.context = builder.context;
         this.capturandroCallback = builder.capturandroCallback;
         this.filenamePrefix = builder.filenamePrefix;
         this.storageDirectoryPath = builder.storageDirectoryPath;
@@ -92,23 +93,22 @@ public class Capturandro {
         this.cameraIntentResultCode = builder.cameraIntentResultCode;
     }
 
-    public void importImageFromCamera() {
-        importImageFromCamera(getUniqueFilename());
+    public void importImageFromCamera(Activity activity) {
+        importImageFromCamera(activity, getUniqueFilename());
     }
 
-    public void importImageFromCamera(String filename) {
+    public void importImageFromCamera(Activity activity, String filename) {
         Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
         intent.putExtra(MediaStore.EXTRA_OUTPUT, Uri.fromFile(new File(getStorageDirectoryPath(), filename)));
         this.filename = filename;
-
         activity.startActivityForResult(intent, cameraIntentResultCode);
     }
 
-    public void importImageFromGallery() {
-        importImageFromGallery(getUniqueFilename());
+    public void importImageFromGallery(Activity activity) {
+        importImageFromGallery(activity, getUniqueFilename());
     }
 
-    public void importImageFromGallery(String filename) {
+    public void importImageFromGallery(Activity activity, String filename) {
         Intent intent = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
         this.filename = filename;
         activity.startActivityForResult(intent, galleryIntentResultCode);
@@ -170,7 +170,7 @@ public class Capturandro {
     }
 
     private void handleImageFromGallery(Uri selectedImage, String filename) {
-        Cursor cursor = activity.getContentResolver().query(selectedImage, FILE_PATH_COLUMNS, null, null, null);
+        Cursor cursor = context.getContentResolver().query(selectedImage, FILE_PATH_COLUMNS, null, null, null);
 
         if (cursor != null) {
             cursor.moveToFirst();
@@ -216,7 +216,7 @@ public class Capturandro {
             throw new IllegalStateException("Unable to import image. Have you implemented CapturandroCallback?");
         }
 
-        new DownloadPicasaImageAsyncTask(activity, selectedImage, filename, capturandroCallback).execute();
+        new DownloadPicasaImageAsyncTask(context, selectedImage, filename, capturandroCallback).execute();
     }
 
 
@@ -226,7 +226,7 @@ public class Capturandro {
         if (filename == null) {
             filename = getUniqueFilename();
         }
-        File outFile = new File(activity.getExternalCacheDir(), filename);
+        File outFile = new File(context.getExternalCacheDir(), filename);
 
         saveBitmap(filename, inFile, outFile);
     }
@@ -281,7 +281,7 @@ public class Capturandro {
 
     public File getStorageDirectoryPath() {
         if (storageDirectoryPath == null || !storageDirectoryPath.equals("")) {
-            return activity.getExternalCacheDir();
+            return context.getExternalCacheDir();
         } else {
             return storageDirectoryPath;
         }
