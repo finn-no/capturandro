@@ -9,7 +9,7 @@ subprojects {
             mavenCentral()
         }
         dependencies {
-            classpath 'com.android.tools.build:gradle:0.13.0'
+            classpath 'com.android.tools.build:gradle:1.0.1'
 
             //Testing/Non code stuff (can use +):
             classpath 'com.jakewharton.sdkmanager:gradle-plugin:0.12.+'
