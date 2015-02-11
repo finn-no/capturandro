@@ -1,15 +1,20 @@
 package no.finntech.capturandro;
 
 import android.app.Activity;
+import android.content.ActivityNotFoundException;
 import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.media.ExifInterface;
 import android.net.Uri;
 import android.provider.MediaStore;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 
 import no.finntech.capturandro.asynctask.DownloadPicasaImageAsyncTask;
@@ -109,9 +114,17 @@ public class Capturandro {
     }
 
     public void importImageFromGallery(Activity activity, String filename) {
-        Intent intent = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+        Intent intent;
         this.filename = filename;
-        activity.startActivityForResult(intent, galleryIntentResultCode);
+        try {
+            intent = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+            activity.startActivityForResult(intent, galleryIntentResultCode);
+        } catch (ActivityNotFoundException e) {
+            intent = new Intent(Intent.ACTION_GET_CONTENT);
+            intent.setType("image/*");
+            intent.addCategory(Intent.CATEGORY_OPENABLE);
+            activity.startActivityForResult(intent, galleryIntentResultCode);
+        }
     }
 
     public void onActivityResult(int reqCode, int resultCode, Intent intent) throws IllegalArgumentException {
@@ -120,33 +133,32 @@ public class Capturandro {
         }
 
         if (reqCode == cameraIntentResultCode) {
-            if (resultCode == Activity.RESULT_OK) {
-                if (filename != null) {
-                    File fileToStore = new File(getStorageDirectoryPath(), filename);
-                    try {
-                        fileToStore.createNewFile();
-                    } catch (IOException e) {
-                        capturandroCallback.onCameraImportFailure(e);
-                    }
-                    saveBitmap(filename, fileToStore, fileToStore);
-                } else {
-                    capturandroCallback.onCameraImportFailure(new IllegalArgumentException("Image could not be added"));
+            if (resultCode != Activity.RESULT_OK || filename == null) {
+                File fileToStore = new File(getStorageDirectoryPath(), filename);
+                try {
+                    fileToStore.createNewFile();
+                } catch (IOException e) {
+                    capturandroCallback.onCameraImportFailure(e);
                 }
+                saveBitmap(filename, fileToStore, fileToStore);
+            } else {
+                capturandroCallback.onCameraImportFailure(new RuntimeException("Could not get image from camera"));
             }
         } else if (reqCode == galleryIntentResultCode) {
-            Uri selectedImage = null;
+            if (resultCode == Activity.RESULT_OK) {
+                if (intent != null) { //sometimes returns null when gallery app is opened
+                    Uri selectedImage = intent.getData();
 
-            if (intent != null) {
-                selectedImage = intent.getData();
-            }
+                    if (isUserAttemptingToAddVideo(selectedImage)) {
+                        capturandroCallback.onCameraImportFailure(new IllegalArgumentException("Videos can't be added"));
+                        return;
+                    }
 
-            if (isUserAttemptingToAddVideo(selectedImage)) {
-                capturandroCallback.onCameraImportFailure(new IllegalArgumentException("Videos can't be added"));
-//                    break;
-            }
-
-            if (selectedImage != null) {
-                handleImageFromGallery(selectedImage, filename);
+                    if (selectedImage != null) {
+                        handleImageFromGallery(selectedImage, filename);
+                        capturandroCallback.onCameraImportSuccess(filename);
+                    }
+                }
             }
         }
     }
@@ -178,12 +190,30 @@ public class Capturandro {
 
             if (isPicasaAndroid3Image(selectedImage) || imageIsRemote(cursor)) {
                 fetchPicasaAndroid3Image(selectedImage, filename, cursor);
+            } else if ("content".equals(selectedImage.getScheme())) {
+                fetchOldStyleGalleryImageFile(selectedImage, filename);
             } else {
                 fetchLocalGalleryImageFile(filename, cursor, columnIndex);
             }
-
             cursor.close();
         }
+    }
+
+    private void fetchOldStyleGalleryImageFile(Uri selectedImage, String filename) {
+        InputStream stream = null;
+        try {
+            stream = context.getContentResolver().openInputStream(selectedImage);
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
+        Bitmap bitmap = BitmapFactory.decodeStream(stream);
+        try {
+            stream.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        final File filenameToSave = new File(getStorageDirectoryPath(), filename);
+        BitmapUtil.saveBitmap(bitmap, filenameToSave);
     }
 
     private boolean isPicasaAndroid3Image(Uri selectedImage) {
@@ -197,7 +227,7 @@ public class Capturandro {
 
     private boolean imageIsRemote(Cursor cursor) {
         int columnIndex = cursor.getColumnIndex(MediaStore.MediaColumns.DISPLAY_NAME);
-        if (columnIndex != -1 && (cursor.getString(columnIndex).startsWith("http://") )) {
+        if (columnIndex != -1 && (cursor.getString(columnIndex).startsWith("http://"))) {
             return true;
         }
         return false;
@@ -226,7 +256,7 @@ public class Capturandro {
         if (filename == null) {
             filename = getUniqueFilename();
         }
-        File outFile = new File(context.getExternalCacheDir(), filename);
+        File outFile = new File(getStorageDirectoryPath(), filename);
 
         saveBitmap(filename, inFile, outFile);
     }
@@ -276,11 +306,15 @@ public class Capturandro {
     }
 
     private String getUniqueFilename() {
-        return filenamePrefix + System.currentTimeMillis() + ".jpg";
+        if (filenamePrefix != null) {
+            return filenamePrefix + System.currentTimeMillis() + ".jpg";
+        } else {
+            return "capturandro-" + System.currentTimeMillis() + ".jpg";
+        }
     }
 
     public File getStorageDirectoryPath() {
-        if (storageDirectoryPath == null || !storageDirectoryPath.equals("")) {
+        if (storageDirectoryPath == null || !storageDirectoryPath.getAbsolutePath().equals("")) {
             return context.getExternalCacheDir();
         } else {
             return storageDirectoryPath;
