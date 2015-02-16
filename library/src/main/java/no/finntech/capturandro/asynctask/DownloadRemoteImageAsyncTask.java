@@ -20,7 +20,7 @@ import java.net.URL;
 import static no.finntech.capturandro.Config.STORED_IMAGE_HEIGHT;
 import static no.finntech.capturandro.Config.STORED_IMAGE_WIDTH;
 
-public class DownloadPicasaImageAsyncTask extends AsyncTask<Void, Integer, CapturandroCallback> {
+public class DownloadRemoteImageAsyncTask extends AsyncTask<Void, Integer, CapturandroCallback> {
 
     private CapturandroCallback capturandroCallback;
     protected Context context;
@@ -28,7 +28,7 @@ public class DownloadPicasaImageAsyncTask extends AsyncTask<Void, Integer, Captu
     private Uri uri;
     private String filename;
 
-    public DownloadPicasaImageAsyncTask(Context context, Uri imageToDownloadUri, String filename, CapturandroCallback capturandroCallback) {
+    public DownloadRemoteImageAsyncTask(Context context, Uri imageToDownloadUri, String filename, CapturandroCallback capturandroCallback) {
         this.context = context;
         this.uri = imageToDownloadUri;
         this.filename = filename;
@@ -37,7 +37,7 @@ public class DownloadPicasaImageAsyncTask extends AsyncTask<Void, Integer, Captu
 
     @Override
     protected void onPreExecute(){
-        capturandroCallback.onPicasaImportStarted(this, filename);
+        capturandroCallback.onGalleryImportStarted(this, filename);
     }
 
     @Override
@@ -55,7 +55,7 @@ public class DownloadPicasaImageAsyncTask extends AsyncTask<Void, Integer, Captu
             outputStream = new FileOutputStream(file);
             IOUtils.copy(inputStream, outputStream);
         } catch (IOException e) {
-            capturandroCallback.onPicasaImportFailure(e);
+            capturandroCallback.onGalleryImportFailure(e);
         } finally {
             IOUtils.closeQuietly(outputStream);
             IOUtils.closeQuietly(inputStream);
@@ -73,7 +73,7 @@ public class DownloadPicasaImageAsyncTask extends AsyncTask<Void, Integer, Captu
 
     @Override
     protected void onPostExecute(CapturandroCallback callback){
-        callback.onPicasaImportSuccess(filename);
+        callback.onGalleryImportSuccess(filename);
     }
 
     public void setCapturandroCallback(CapturandroCallback capturandroCallback){

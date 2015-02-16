@@ -17,7 +17,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 
-import no.finntech.capturandro.asynctask.DownloadPicasaImageAsyncTask;
+import no.finntech.capturandro.asynctask.DownloadRemoteImageAsyncTask;
 import no.finntech.capturandro.callbacks.CapturandroCallback;
 import no.finntech.capturandro.util.BitmapUtil;
 
@@ -246,7 +246,7 @@ public class Capturandro {
             throw new IllegalStateException("Unable to import image. Have you implemented CapturandroCallback?");
         }
 
-        new DownloadPicasaImageAsyncTask(context, selectedImage, filename, capturandroCallback).execute();
+        new DownloadRemoteImageAsyncTask(context, selectedImage, filename, capturandroCallback).execute();
     }
 
 

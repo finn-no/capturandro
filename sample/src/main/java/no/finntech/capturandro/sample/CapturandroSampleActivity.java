@@ -16,7 +16,7 @@ import android.widget.Toast;
 import java.io.File;
 
 import no.finntech.capturandro.Capturandro;
-import no.finntech.capturandro.asynctask.DownloadPicasaImageAsyncTask;
+import no.finntech.capturandro.asynctask.DownloadRemoteImageAsyncTask;
 import no.finntech.capturandro.callbacks.CapturandroCallback;
 
 public class CapturandroSampleActivity extends Activity implements CapturandroCallback {
@@ -79,18 +79,18 @@ public class CapturandroSampleActivity extends Activity implements CapturandroCa
     }
 
     @Override
-    public void onPicasaImportStarted(DownloadPicasaImageAsyncTask downloadPicasaImageAsyncTask, String filename) {
+    public void onGalleryImportStarted(DownloadRemoteImageAsyncTask downloadRemoteImageAsyncTask, String filename) {
         progressDialog = ProgressDialog.show(this, "Downloading", "Downloading image from Picasa...", true);
     }
 
     @Override
-    public void onPicasaImportSuccess(String filename) {
+    public void onGalleryImportSuccess(String filename) {
         progressDialog.dismiss();
         showImageFile(filename);
     }
 
     @Override
-    public void onPicasaImportFailure(Exception e) {
+    public void onGalleryImportFailure(Exception e) {
         progressDialog.dismiss();
         Toast.makeText(this, "Import of image(s) from Picasa failed", Toast.LENGTH_LONG).show();
     }
