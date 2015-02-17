@@ -99,23 +99,14 @@ public class Capturandro {
     }
 
     public void importImageFromCamera(Activity activity) {
-        importImageFromCamera(activity, getUniqueFilename());
-    }
-
-    public void importImageFromCamera(Activity activity, String filename) {
         Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+        this.filename = getUniqueFilename();
         intent.putExtra(MediaStore.EXTRA_OUTPUT, Uri.fromFile(new File(getStorageDirectoryPath(), filename)));
-        this.filename = filename;
         activity.startActivityForResult(intent, cameraIntentResultCode);
     }
 
     public void importImageFromGallery(Activity activity) {
-        importImageFromGallery(activity, getUniqueFilename());
-    }
-
-    public void importImageFromGallery(Activity activity, String filename) {
         Intent intent;
-        this.filename = filename;
         try {
             intent = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
             activity.startActivityForResult(intent, galleryIntentResultCode);
@@ -131,53 +122,48 @@ public class Capturandro {
         if (capturandroCallback == null) {
             throw new IllegalStateException("Unable to import image. Have you implemented CapturandroCallback?");
         }
+        if (filename == null) {
+            filename = getUniqueFilename();
+        }
 
         if (reqCode == cameraIntentResultCode) {
-            if (resultCode != Activity.RESULT_OK || filename == null) {
+            if (resultCode == Activity.RESULT_OK && filename != null) {
                 File fileToStore = new File(getStorageDirectoryPath(), filename);
                 try {
                     fileToStore.createNewFile();
                 } catch (IOException e) {
                     capturandroCallback.onCameraImportFailure(e);
                 }
-                saveBitmap(filename, fileToStore, fileToStore);
+                resizeAndRotateFile(fileToStore, fileToStore);
+                capturandroCallback.onCameraImportSuccess(filename);
             } else {
                 capturandroCallback.onCameraImportFailure(new RuntimeException("Could not get image from camera"));
             }
         } else if (reqCode == galleryIntentResultCode) {
-            if (resultCode == Activity.RESULT_OK) {
-                if (intent != null) { //sometimes returns null when gallery app is opened
-                    Uri selectedImage = intent.getData();
+            if (resultCode == Activity.RESULT_OK && intent != null) { //sometimes intent is null when gallery app is opened
+                Uri selectedImage = intent.getData();
 
-                    if (isUserAttemptingToAddVideo(selectedImage)) {
-                        capturandroCallback.onCameraImportFailure(new IllegalArgumentException("Videos can't be added"));
-                        return;
-                    }
+                if (isUserAttemptingToAddVideo(selectedImage)) {
+                    capturandroCallback.onCameraImportFailure(new IllegalArgumentException("Videos can't be added"));
+                    return;
+                }
 
-                    if (selectedImage != null) {
-                        handleImageFromGallery(selectedImage, filename);
-                        capturandroCallback.onCameraImportSuccess(filename);
-                    }
+                if (selectedImage != null) {
+                    handleImageFromGallery(selectedImage, filename);
+                    capturandroCallback.onCameraImportSuccess(filename);
                 }
             }
         }
     }
 
-    private void saveBitmap(String imageFilename, File inFile, File outFile) {
-        try {
-            // Store Exif information as it is not kept when image is copied
-            ExifInterface exifInterface = BitmapUtil.getExifFromFile(inFile);
+    private void resizeAndRotateFile(File inFile, File outFile) {
+        // Store Exif information as it is not kept when image is copied
+        ExifInterface exifInterface = BitmapUtil.getExifFromFile(inFile);
 
-            if (exifInterface != null) {
-                BitmapUtil.resizeAndRotateAndSaveBitmapFile(inFile, outFile, exifInterface, STORED_IMAGE_WIDTH, STORED_IMAGE_HEIGHT);
-            } else {
-                BitmapUtil.resizeAndSaveBitmapFile(outFile, STORED_IMAGE_WIDTH, STORED_IMAGE_HEIGHT);
-            }
-
-            capturandroCallback.onCameraImportSuccess(imageFilename);
-
-        } catch (IllegalArgumentException e) {
-            capturandroCallback.onCameraImportFailure(e);
+        if (exifInterface != null) {
+            BitmapUtil.resizeAndRotateAndSaveBitmapFile(inFile, outFile, exifInterface, STORED_IMAGE_WIDTH, STORED_IMAGE_HEIGHT);
+        } else {
+            BitmapUtil.resizeAndSaveBitmapFile(outFile, STORED_IMAGE_WIDTH, STORED_IMAGE_HEIGHT);
         }
     }
 
@@ -242,10 +228,6 @@ public class Capturandro {
     }
 
     private void fetchPicasaImage(Uri selectedImage, String filename) {
-        if (capturandroCallback == null) {
-            throw new IllegalStateException("Unable to import image. Have you implemented CapturandroCallback?");
-        }
-
         new DownloadRemoteImageAsyncTask(context, selectedImage, filename, capturandroCallback).execute();
     }
 
@@ -258,7 +240,7 @@ public class Capturandro {
         }
         File outFile = new File(getStorageDirectoryPath(), filename);
 
-        saveBitmap(filename, inFile, outFile);
+        resizeAndRotateFile(inFile, outFile);
     }
 
     private boolean isUserAttemptingToAddVideo(Uri selectedImage) {
