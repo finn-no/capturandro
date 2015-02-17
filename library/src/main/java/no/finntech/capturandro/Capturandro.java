@@ -127,11 +127,13 @@ public class Capturandro {
         }
 
         if (reqCode == cameraIntentResultCode) {
-            if (resultCode == Activity.RESULT_OK && filename != null) {
-                File fileToStore = new File(getStorageDirectoryPath(), filename);
-                capturandroCallback.onImportSuccess(resizeAndRotateFile(fileToStore));
-            } else {
-                capturandroCallback.onCameraImportFailure(new RuntimeException("Could not get image from camera"));
+            if (resultCode == Activity.RESULT_OK) {
+                if (filename != null) {
+                    File fileToStore = new File(getStorageDirectoryPath(), filename);
+                    capturandroCallback.onImportSuccess(resizeAndRotateFile(fileToStore));
+                } else {
+                    capturandroCallback.onCameraImportFailure(new RuntimeException("Could not get image from camera"));
+                }
             }
         } else if (reqCode == galleryIntentResultCode) {
             if (resultCode == Activity.RESULT_OK && intent != null) { //sometimes intent is null when gallery app is opened
@@ -162,8 +164,11 @@ public class Capturandro {
     }
 
     private Bitmap handleImageFromGallery(Uri selectedImage, String filename) {
-        Cursor cursor = context.getContentResolver().query(selectedImage, FILE_PATH_COLUMNS, null, null, null);
+        if (selectedImage.getScheme().equals("file")) {
+            return fetchOldStyleGalleryImageFile(selectedImage);
+        }
 
+        Cursor cursor = context.getContentResolver().query(selectedImage, FILE_PATH_COLUMNS, null, null, null);
         if (cursor != null) {
             cursor.moveToFirst();
             int columnIndex = cursor.getColumnIndex(MediaStore.MediaColumns.DATA);
