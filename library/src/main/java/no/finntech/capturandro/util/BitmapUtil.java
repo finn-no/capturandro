@@ -10,10 +10,7 @@ import org.apache.commons.io.IOUtils;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
-
-import no.finntech.capturandro.Config;
 
 public class BitmapUtil {
 
@@ -51,30 +48,7 @@ public class BitmapUtil {
     }
 
 
-    public static void resizeAndSaveBitmapFile(File fileToResizeAndSave, int reqWidth, int reqHeight) throws IllegalArgumentException {
-        Bitmap bitmap = decodeBitmap(fileToResizeAndSave, reqWidth, reqHeight);
-        saveBitmap(bitmap, fileToResizeAndSave);
-    }
-
-    public static void resizeAndSaveBitmapFile(File inFile, File outFile, int reqWidth, int reqHeight) throws IllegalArgumentException {
-        Bitmap bitmap = decodeBitmap(inFile, reqWidth, reqHeight);
-        saveBitmap(bitmap, outFile);
-    }
-
-    public static void saveBitmap(Bitmap bitmap, File filenameToSave) throws IllegalArgumentException {
-        FileOutputStream out = null;
-        int compressionPercentage = Config.DEFAULT_STORED_IMAGE_COMPRESSION_PERCENT;
-        try {
-            out = new FileOutputStream(filenameToSave);
-            bitmap.compress(Bitmap.CompressFormat.JPEG, compressionPercentage, out);
-        } catch (FileNotFoundException e) {
-            throw new IllegalArgumentException(e.getMessage(), e);
-        } finally {
-            IOUtils.closeQuietly(out);
-        }
-    }
-
-    public static int calculateInSampleSize(BitmapFactory.Options options, int reqWidth, int reqHeight) {
+    private static int calculateInSampleSize(BitmapFactory.Options options, int reqWidth, int reqHeight) {
         // Raw height and width of image
         final int height = options.outHeight;
         final int width = options.outWidth;
@@ -99,7 +73,7 @@ public class BitmapUtil {
         return inSampleSize;
     }
 
-    public static void resizeAndRotateAndSaveBitmapFile(File inFile, File outFile, ExifInterface exif, int reqWidth, int reqHeight) {
+    public static Bitmap resizeAndRotateBitmapFromFile(File inFile, ExifInterface exif, int reqWidth, int reqHeight) {
 
         int orientation = exif.getAttributeInt(ExifInterface.TAG_ORIENTATION, 1);
 
@@ -128,12 +102,10 @@ public class BitmapUtil {
             Bitmap sourceBitmap = BitmapUtil.decodeBitmap(inFile, reqWidth, reqHeight);
 
             // Bitmap is immutable, so we need to create a new one based on the transformation
-            Bitmap rotatedBitmap =
-                    Bitmap.createBitmap(sourceBitmap, 0, 0, sourceBitmap.getWidth(), sourceBitmap.getHeight(), transformationMatrix, true);
-            BitmapUtil.saveBitmap(rotatedBitmap, outFile);
+            return Bitmap.createBitmap(sourceBitmap, 0, 0, sourceBitmap.getWidth(), sourceBitmap.getHeight(), transformationMatrix, true);
         } else {
-            // Orientation for image is correct, so we save it
-            resizeAndSaveBitmapFile(inFile, outFile, reqWidth, reqHeight);
+            // Orientation for image is correct, so we just return it
+            return decodeBitmap(inFile, reqWidth, reqHeight);
         }
     }
 

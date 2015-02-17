@@ -129,13 +129,7 @@ public class Capturandro {
         if (reqCode == cameraIntentResultCode) {
             if (resultCode == Activity.RESULT_OK && filename != null) {
                 File fileToStore = new File(getStorageDirectoryPath(), filename);
-                try {
-                    fileToStore.createNewFile();
-                } catch (IOException e) {
-                    capturandroCallback.onCameraImportFailure(e);
-                }
-                resizeAndRotateFile(fileToStore, fileToStore);
-                capturandroCallback.onCameraImportSuccess(filename);
+                capturandroCallback.onImportSuccess(resizeAndRotateFile(fileToStore));
             } else {
                 capturandroCallback.onCameraImportFailure(new RuntimeException("Could not get image from camera"));
             }
@@ -149,25 +143,25 @@ public class Capturandro {
                 }
 
                 if (selectedImage != null) {
-                    handleImageFromGallery(selectedImage, filename);
-                    capturandroCallback.onCameraImportSuccess(filename);
+                    final Bitmap bitmap = handleImageFromGallery(selectedImage, filename);
+                    capturandroCallback.onImportSuccess(bitmap);
                 }
             }
         }
     }
 
-    private void resizeAndRotateFile(File inFile, File outFile) {
+    private Bitmap resizeAndRotateFile(File inFile) {
         // Store Exif information as it is not kept when image is copied
         ExifInterface exifInterface = BitmapUtil.getExifFromFile(inFile);
 
         if (exifInterface != null) {
-            BitmapUtil.resizeAndRotateAndSaveBitmapFile(inFile, outFile, exifInterface, STORED_IMAGE_WIDTH, STORED_IMAGE_HEIGHT);
+            return BitmapUtil.resizeAndRotateBitmapFromFile(inFile, exifInterface, STORED_IMAGE_WIDTH, STORED_IMAGE_HEIGHT);
         } else {
-            BitmapUtil.resizeAndSaveBitmapFile(outFile, STORED_IMAGE_WIDTH, STORED_IMAGE_HEIGHT);
+            return BitmapUtil.decodeBitmap(inFile, STORED_IMAGE_WIDTH, STORED_IMAGE_HEIGHT);
         }
     }
 
-    private void handleImageFromGallery(Uri selectedImage, String filename) {
+    private Bitmap handleImageFromGallery(Uri selectedImage, String filename) {
         Cursor cursor = context.getContentResolver().query(selectedImage, FILE_PATH_COLUMNS, null, null, null);
 
         if (cursor != null) {
@@ -177,29 +171,26 @@ public class Capturandro {
             if (isPicasaAndroid3Image(selectedImage) || imageIsRemote(cursor)) {
                 fetchPicasaAndroid3Image(selectedImage, filename, cursor);
             } else if ("content".equals(selectedImage.getScheme())) {
-                fetchOldStyleGalleryImageFile(selectedImage, filename);
+                return fetchOldStyleGalleryImageFile(selectedImage);
             } else {
-                fetchLocalGalleryImageFile(filename, cursor, columnIndex);
+                return fetchLocalGalleryImageFile(cursor, columnIndex);
             }
             cursor.close();
         }
+        return null;
     }
 
-    private void fetchOldStyleGalleryImageFile(Uri selectedImage, String filename) {
+    private Bitmap fetchOldStyleGalleryImageFile(Uri selectedImage) {
         InputStream stream = null;
         try {
             stream = context.getContentResolver().openInputStream(selectedImage);
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        }
-        Bitmap bitmap = BitmapFactory.decodeStream(stream);
-        try {
+            Bitmap bitmap = BitmapFactory.decodeStream(stream);
             stream.close();
+            return bitmap;
         } catch (IOException e) {
             e.printStackTrace();
         }
-        final File filenameToSave = new File(getStorageDirectoryPath(), filename);
-        BitmapUtil.saveBitmap(bitmap, filenameToSave);
+        return null;
     }
 
     private boolean isPicasaAndroid3Image(Uri selectedImage) {
@@ -219,12 +210,13 @@ public class Capturandro {
         return false;
     }
 
-    private void fetchPicasaAndroid3Image(Uri selectedImage, String filename, Cursor cursor) {
+    private Bitmap fetchPicasaAndroid3Image(Uri selectedImage, String filename, Cursor cursor) {
         int columnIndex;
         columnIndex = cursor.getColumnIndex(MediaStore.MediaColumns.DISPLAY_NAME);
         if (columnIndex != -1) {
             fetchPicasaImage(selectedImage, filename);
         }
+        return null;
     }
 
     private void fetchPicasaImage(Uri selectedImage, String filename) {
@@ -232,15 +224,10 @@ public class Capturandro {
     }
 
 
-    private void fetchLocalGalleryImageFile(String filename, Cursor cursor, int columnIndex) {
+    private Bitmap fetchLocalGalleryImageFile(Cursor cursor, int columnIndex) {
         // Resize and save so that the image is still kept if the user deletes the original image from Gallery
         File inFile = new File(cursor.getString(columnIndex));
-        if (filename == null) {
-            filename = getUniqueFilename();
-        }
-        File outFile = new File(getStorageDirectoryPath(), filename);
-
-        resizeAndRotateFile(inFile, outFile);
+        return resizeAndRotateFile(inFile);
     }
 
     private boolean isUserAttemptingToAddVideo(Uri selectedImage) {

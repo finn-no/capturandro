@@ -1,6 +1,7 @@
 package no.finntech.capturandro.asynctask;
 
 import android.content.Context;
+import android.graphics.Bitmap;
 import android.media.ExifInterface;
 import android.net.Uri;
 import android.os.AsyncTask;
@@ -27,6 +28,7 @@ public class DownloadRemoteImageAsyncTask extends AsyncTask<Void, Integer, Captu
 
     private Uri uri;
     private String filename;
+    private Bitmap bitmap;
 
     public DownloadRemoteImageAsyncTask(Context context, Uri imageToDownloadUri, String filename, CapturandroCallback capturandroCallback) {
         this.context = context;
@@ -63,9 +65,9 @@ public class DownloadRemoteImageAsyncTask extends AsyncTask<Void, Integer, Captu
 
         ExifInterface exifInterface = BitmapUtil.getExifFromFile(file);
         if (exifInterface != null) {
-            BitmapUtil.resizeAndRotateAndSaveBitmapFile(file, file, exifInterface, STORED_IMAGE_WIDTH, STORED_IMAGE_HEIGHT);
+            bitmap = BitmapUtil.resizeAndRotateBitmapFromFile(file, exifInterface, STORED_IMAGE_WIDTH, STORED_IMAGE_HEIGHT);
         } else {
-            BitmapUtil.resizeAndSaveBitmapFile(file, file, STORED_IMAGE_WIDTH, STORED_IMAGE_HEIGHT);
+            bitmap = BitmapUtil.decodeBitmap(file, STORED_IMAGE_WIDTH, STORED_IMAGE_HEIGHT);
         }
 
         return capturandroCallback;
@@ -73,7 +75,7 @@ public class DownloadRemoteImageAsyncTask extends AsyncTask<Void, Integer, Captu
 
     @Override
     protected void onPostExecute(CapturandroCallback callback){
-        callback.onGalleryImportSuccess(filename);
+        callback.onImportSuccess(bitmap);
     }
 
     public void setCapturandroCallback(CapturandroCallback capturandroCallback){

@@ -53,21 +53,19 @@ public class CapturandroSampleActivity extends Activity implements CapturandroCa
     }
 
     @Override
-    public void onCameraImportSuccess(String filename) {
-        showImageFile(filename);
+    public void onImportSuccess(Bitmap bitmap) {
+        if (progressDialog != null && progressDialog.isShowing()) {
+            progressDialog.dismiss();
+        }
+        showImageFile(bitmap);
     }
 
-    private void showImageFile(String filename) {
-        File imageFile = new File(getExternalCacheDir(), filename);
-
-        if (imageFile.exists()) {
-            Bitmap bitmap = BitmapFactory.decodeFile(imageFile.getAbsolutePath());
-            ImageView imageView = new ImageView(this);
-            imageView.setImageBitmap(bitmap);
-            imageView.setLayoutParams(new ViewGroup.LayoutParams(
-                    ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT));
-            ((LinearLayout) findViewById(R.id.image_list)).addView(imageView);
-        }
+    private void showImageFile(Bitmap bitmap) {
+        ImageView imageView = new ImageView(this);
+        imageView.setImageBitmap(bitmap);
+        imageView.setLayoutParams(new ViewGroup.LayoutParams(
+                ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+        ((LinearLayout) findViewById(R.id.image_list)).addView(imageView);
     }
 
     @Override
@@ -81,12 +79,6 @@ public class CapturandroSampleActivity extends Activity implements CapturandroCa
     @Override
     public void onGalleryImportStarted(DownloadRemoteImageAsyncTask downloadRemoteImageAsyncTask, String filename) {
         progressDialog = ProgressDialog.show(this, "Downloading", "Downloading image from Picasa...", true);
-    }
-
-    @Override
-    public void onGalleryImportSuccess(String filename) {
-        progressDialog.dismiss();
-        showImageFile(filename);
     }
 
     @Override
