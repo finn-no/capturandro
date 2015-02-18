@@ -2,12 +2,8 @@ package no.finntech.capturandro.asynctask;
 
 import android.content.Context;
 import android.graphics.Bitmap;
-import android.media.ExifInterface;
 import android.net.Uri;
 import android.os.AsyncTask;
-
-import no.finntech.capturandro.callbacks.CapturandroCallback;
-import no.finntech.capturandro.util.BitmapUtil;
 
 import org.apache.commons.io.IOUtils;
 
@@ -18,8 +14,8 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.URL;
 
-import static no.finntech.capturandro.Config.STORED_IMAGE_HEIGHT;
-import static no.finntech.capturandro.Config.STORED_IMAGE_WIDTH;
+import no.finntech.capturandro.callbacks.CapturandroCallback;
+import no.finntech.capturandro.util.BitmapUtil;
 
 public class DownloadRemoteImageAsyncTask extends AsyncTask<Void, Integer, CapturandroCallback> {
 
@@ -38,7 +34,7 @@ public class DownloadRemoteImageAsyncTask extends AsyncTask<Void, Integer, Captu
     }
 
     @Override
-    protected void onPreExecute(){
+    protected void onPreExecute() {
         capturandroCallback.onGalleryImportStarted(this, filename);
     }
 
@@ -63,22 +59,17 @@ public class DownloadRemoteImageAsyncTask extends AsyncTask<Void, Integer, Captu
             IOUtils.closeQuietly(inputStream);
         }
 
-        ExifInterface exifInterface = BitmapUtil.getExifFromFile(file);
-        if (exifInterface != null) {
-            bitmap = BitmapUtil.resizeAndRotateBitmapFromFile(file, exifInterface, STORED_IMAGE_WIDTH, STORED_IMAGE_HEIGHT);
-        } else {
-            bitmap = BitmapUtil.decodeBitmap(file, STORED_IMAGE_WIDTH, STORED_IMAGE_HEIGHT);
-        }
+        bitmap = BitmapUtil.getProcessedBitmap(file);
 
         return capturandroCallback;
     }
 
     @Override
-    protected void onPostExecute(CapturandroCallback callback){
+    protected void onPostExecute(CapturandroCallback callback) {
         callback.onImportSuccess(bitmap);
     }
 
-    public void setCapturandroCallback(CapturandroCallback capturandroCallback){
+    public void setCapturandroCallback(CapturandroCallback capturandroCallback) {
         this.capturandroCallback = capturandroCallback;
     }
 }

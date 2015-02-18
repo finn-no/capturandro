@@ -5,7 +5,6 @@ import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.content.Intent;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.os.Bundle;
 import android.view.View;
 import android.view.ViewGroup;
@@ -13,11 +12,10 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.Toast;
 
-import java.io.File;
-
 import no.finntech.capturandro.Capturandro;
 import no.finntech.capturandro.asynctask.DownloadRemoteImageAsyncTask;
 import no.finntech.capturandro.callbacks.CapturandroCallback;
+import no.finntech.capturandro.exception.CapturandroException;
 
 public class CapturandroSampleActivity extends Activity implements CapturandroCallback {
     private static final int CAMERA_RESULT_CODE = 1;
@@ -36,7 +34,11 @@ public class CapturandroSampleActivity extends Activity implements CapturandroCa
                 .withCameraIntentResultCode(CAMERA_RESULT_CODE)
                 .withGalleryIntentResultCode(GALLERY_RESULT_CODE)
                 .build();
-        capturandro.handleImageIfSentFromGallery(getIntent());
+        try {
+            capturandro.handleSharedImageIntent(getIntent());
+        } catch (CapturandroException e) {
+            Toast.makeText(this, e.toString(), Toast.LENGTH_SHORT).show();
+        }
     }
 
     public void addFromCameraClick(View v) {
@@ -49,7 +51,11 @@ public class CapturandroSampleActivity extends Activity implements CapturandroCa
 
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
-        capturandro.onActivityResult(requestCode, resultCode, data);
+        try {
+            capturandro.onActivityResult(requestCode, resultCode, data);
+        } catch (CapturandroException e) {
+            Toast.makeText(this, e.toString(), Toast.LENGTH_SHORT).show();
+        }
     }
 
     @Override
@@ -86,4 +92,5 @@ public class CapturandroSampleActivity extends Activity implements CapturandroCa
         progressDialog.dismiss();
         Toast.makeText(this, "Import of image(s) from Picasa failed", Toast.LENGTH_LONG).show();
     }
+
 }

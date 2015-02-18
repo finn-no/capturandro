@@ -4,6 +4,7 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Matrix;
 import android.media.ExifInterface;
+import android.util.Log;
 
 import org.apache.commons.io.IOUtils;
 
@@ -12,9 +13,24 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 
+import static no.finntech.capturandro.Config.STORED_IMAGE_HEIGHT;
+import static no.finntech.capturandro.Config.STORED_IMAGE_WIDTH;
+
 public class BitmapUtil {
 
     private BitmapUtil() {
+    }
+
+
+    public static Bitmap getProcessedBitmap(File inFile) {
+        // Store Exif information as it is not kept when image is copied
+        ExifInterface exifInterface = BitmapUtil.getExifFromFile(inFile);
+
+        if (exifInterface != null) {
+            return BitmapUtil.resizeAndRotateBitmapFromFile(inFile, exifInterface, STORED_IMAGE_WIDTH, STORED_IMAGE_HEIGHT);
+        } else {
+            return BitmapUtil.decodeBitmap(inFile, STORED_IMAGE_WIDTH, STORED_IMAGE_HEIGHT);
+        }
     }
 
     // Courtesy of Fedor / Thomas Vervest
@@ -46,7 +62,6 @@ public class BitmapUtil {
             IOUtils.closeQuietly(inSampleSizeImageStream);
         }
     }
-
 
     private static int calculateInSampleSize(BitmapFactory.Options options, int reqWidth, int reqHeight) {
         // Raw height and width of image
@@ -113,8 +128,9 @@ public class BitmapUtil {
         try {
             return new ExifInterface(file.getPath());
         } catch (IOException e) {
-            throw new RuntimeException(e); // TODO: Handle better
+            Log.i("Capturandro", "Could not read Exif data from file: " + file.getPath());
         }
+        return null;
     }
 
 }
