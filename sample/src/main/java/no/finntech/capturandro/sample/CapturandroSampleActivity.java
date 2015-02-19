@@ -31,8 +31,6 @@ public class CapturandroSampleActivity extends Activity implements CapturandroCa
 
             capturandro = new Capturandro.Builder(this)
                 .withCameraCallback(this)
-                .withCameraIntentResultCode(CAMERA_RESULT_CODE)
-                .withGalleryIntentResultCode(GALLERY_RESULT_CODE)
                 .build();
         try {
             capturandro.handleSharedImageIntent(getIntent());
@@ -42,11 +40,11 @@ public class CapturandroSampleActivity extends Activity implements CapturandroCa
     }
 
     public void addFromCameraClick(View v) {
-        capturandro.importImageFromCamera(this);
+        capturandro.importImageFromCamera(this, CAMERA_RESULT_CODE);
     }
 
     public void addFromGalleryClick(View v) {
-        capturandro.importImageFromGallery(this);
+        capturandro.importImageFromGallery(this, GALLERY_RESULT_CODE);
     }
 
     @Override
@@ -59,14 +57,14 @@ public class CapturandroSampleActivity extends Activity implements CapturandroCa
     }
 
     @Override
-    public void onImportSuccess(Bitmap bitmap) {
+    public void onImportSuccess(Bitmap bitmap, int resultCode) {
         if (progressDialog != null && progressDialog.isShowing()) {
             progressDialog.dismiss();
         }
-        showImageFile(bitmap);
+        showImage(bitmap);
     }
 
-    private void showImageFile(Bitmap bitmap) {
+    private void showImage(Bitmap bitmap) {
         ImageView imageView = new ImageView(this);
         imageView.setImageBitmap(bitmap);
         imageView.setLayoutParams(new ViewGroup.LayoutParams(

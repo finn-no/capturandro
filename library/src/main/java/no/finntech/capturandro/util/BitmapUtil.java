@@ -13,14 +13,13 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 
-import static no.finntech.capturandro.Config.STORED_IMAGE_HEIGHT;
-import static no.finntech.capturandro.Config.STORED_IMAGE_WIDTH;
-
 public class BitmapUtil {
+
+    public static int STORED_IMAGE_WIDTH = 1280;
+    public static int STORED_IMAGE_HEIGHT = 720;
 
     private BitmapUtil() {
     }
-
 
     public static Bitmap getProcessedBitmap(File inFile) {
         // Store Exif information as it is not kept when image is copied

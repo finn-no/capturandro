@@ -32,13 +32,15 @@ public class GalleryHandler {
 
     private CapturandroCallback capturandroCallback;
     private Context context;
+    private int resultCode;
 
     public GalleryHandler() {
     }
 
-    public void handle(Uri selectedImage, String filename, CapturandroCallback capturandroCallback, Context context) throws CapturandroException {
+    public void handle(Uri selectedImage, String filename, CapturandroCallback capturandroCallback, Context context, int resultCode) throws CapturandroException {
         this.capturandroCallback = capturandroCallback;
         this.context = context;
+        this.resultCode = resultCode;
 
         if (isUserAttemptingToAddVideo(selectedImage)) {
             capturandroCallback.onCameraImportFailure(new CapturandroException("Video files are not supported"));
@@ -47,7 +49,7 @@ public class GalleryHandler {
 
         if (selectedImage != null) {
             final Bitmap bitmap = handleImageFromGallery(selectedImage, filename);
-            capturandroCallback.onImportSuccess(bitmap);
+            capturandroCallback.onImportSuccess(bitmap, resultCode);
         }
     }
 
@@ -74,7 +76,7 @@ public class GalleryHandler {
     }
 
     private Bitmap fetchOldStyleGalleryImageFile(Uri selectedImage) {
-        InputStream stream = null;
+        InputStream stream;
         try {
             stream = context.getContentResolver().openInputStream(selectedImage);
             Bitmap bitmap = BitmapFactory.decodeStream(stream);
@@ -107,7 +109,7 @@ public class GalleryHandler {
         int columnIndex;
         columnIndex = cursor.getColumnIndex(MediaStore.MediaColumns.DISPLAY_NAME);
         if (columnIndex != -1) {
-            new DownloadRemoteImageAsyncTask(context, selectedImage, filename, capturandroCallback).execute();
+            new DownloadRemoteImageAsyncTask(context, selectedImage, filename, capturandroCallback, resultCode).execute();
         }
         return null;
     }
@@ -115,7 +117,9 @@ public class GalleryHandler {
     private Bitmap fetchLocalGalleryImageFile(Cursor cursor, int columnIndex) {
         // Resize and save so that the image is still kept if the user deletes the original image from Gallery
         File inFile = new File(cursor.getString(columnIndex));
-        return BitmapUtil.getProcessedBitmap(inFile);
+        Bitmap bitmap = BitmapUtil.getProcessedBitmap(inFile);
+        inFile.delete();
+        return bitmap;
     }
 
     private boolean isUserAttemptingToAddVideo(Uri selectedImage) {

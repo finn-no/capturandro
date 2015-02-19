@@ -20,17 +20,19 @@ import no.finntech.capturandro.util.BitmapUtil;
 public class DownloadRemoteImageAsyncTask extends AsyncTask<Void, Integer, CapturandroCallback> {
 
     private CapturandroCallback capturandroCallback;
+    private final int resultCode;
     protected Context context;
 
     private Uri uri;
     private String filename;
     private Bitmap bitmap;
 
-    public DownloadRemoteImageAsyncTask(Context context, Uri imageToDownloadUri, String filename, CapturandroCallback capturandroCallback) {
+    public DownloadRemoteImageAsyncTask(Context context, Uri imageToDownloadUri, String filename, CapturandroCallback capturandroCallback, int resultCode) {
         this.context = context;
         this.uri = imageToDownloadUri;
         this.filename = filename;
         this.capturandroCallback = capturandroCallback;
+        this.resultCode = resultCode;
     }
 
     @Override
@@ -60,13 +62,14 @@ public class DownloadRemoteImageAsyncTask extends AsyncTask<Void, Integer, Captu
         }
 
         bitmap = BitmapUtil.getProcessedBitmap(file);
+        file.delete();
 
         return capturandroCallback;
     }
 
     @Override
     protected void onPostExecute(CapturandroCallback callback) {
-        callback.onImportSuccess(bitmap);
+        callback.onImportSuccess(bitmap, resultCode);
     }
 
     public void setCapturandroCallback(CapturandroCallback capturandroCallback) {

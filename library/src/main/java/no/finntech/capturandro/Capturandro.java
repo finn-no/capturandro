@@ -20,8 +20,8 @@ public class Capturandro {
 
     private final GalleryHandler galleryHandler = new GalleryHandler();
     private final String filenamePrefix;
-    private final int galleryIntentResultCode;
-    private final int cameraIntentResultCode;
+    private int galleryIntentResultCode;
+    private int cameraIntentResultCode;
     private final Context context;
     private CapturandroCallback capturandroCallback;
     private String filename;
@@ -30,8 +30,6 @@ public class Capturandro {
         private CapturandroCallback capturandroCallback;
         private String filenamePrefix;
         private Context context;
-        private int galleryIntentResultCode;
-        private int cameraIntentResultCode;
 
         public Builder(Context context) {
             this.context = context;
@@ -47,16 +45,6 @@ public class Capturandro {
             return this;
         }
 
-        public Builder withGalleryIntentResultCode(int galleryIntentResultCode) {
-            this.galleryIntentResultCode = galleryIntentResultCode;
-            return this;
-        }
-
-        public Builder withCameraIntentResultCode(int cameraIntentResultCode) {
-            this.cameraIntentResultCode = cameraIntentResultCode;
-            return this;
-        }
-
         public Capturandro build() {
             return new Capturandro(this);
         }
@@ -66,26 +54,26 @@ public class Capturandro {
         this.context = builder.context;
         this.capturandroCallback = builder.capturandroCallback;
         this.filenamePrefix = builder.filenamePrefix;
-        this.galleryIntentResultCode = builder.galleryIntentResultCode;
-        this.cameraIntentResultCode = builder.cameraIntentResultCode;
     }
 
     public void setCapturandroCallback(CapturandroCallback capturandroCallback) {
         this.capturandroCallback = capturandroCallback;
     }
 
-    public void importImageFromCamera(Activity activity) {
+    public void importImageFromCamera(Activity activity, int resultCode) {
         Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
         this.filename = getUniqueFilename();
         intent.putExtra(MediaStore.EXTRA_OUTPUT, Uri.fromFile(new File(context.getExternalCacheDir(), filename)));
-        activity.startActivityForResult(intent, cameraIntentResultCode);
+        this.cameraIntentResultCode = resultCode;
+        activity.startActivityForResult(intent, resultCode);
     }
 
-    public void importImageFromGallery(Activity activity) {
+    public void importImageFromGallery(Activity activity, int resultCode) {
         // it probably would have been better if this tried both these methods and presented them
         // both in a chooser instead of falling back when the main one isn't found. With this approach,
         // if you have, say, google's photos (g+) and the cyanogenmod gallery installed, the latter
         // will never be queried.
+        this.galleryIntentResultCode = resultCode;
         Intent intent;
         try {
             intent = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
@@ -108,7 +96,8 @@ public class Capturandro {
                 if (filename != null) {
                     File file = new File(context.getExternalCacheDir(), filename);
                     final Bitmap bitmap = BitmapUtil.getProcessedBitmap(file);
-                    capturandroCallback.onImportSuccess(bitmap);
+                    file.delete();
+                    capturandroCallback.onImportSuccess(bitmap, reqCode);
                 } else {
                     capturandroCallback.onCameraImportFailure(new CapturandroException("Could not get image from camera"));
                 }
@@ -119,7 +108,7 @@ public class Capturandro {
                 if (filename == null) {
                     filename = getUniqueFilename();
                 }
-                galleryHandler.handle(selectedImage, filename, capturandroCallback, context);
+                galleryHandler.handle(selectedImage, filename, capturandroCallback, context, reqCode);
             }
         }
     }
@@ -147,7 +136,7 @@ public class Capturandro {
 
     private void handleSendImages(ArrayList<Uri> imagesFromIntent) throws CapturandroException {
         for (Uri imageUri : imagesFromIntent) {
-            galleryHandler.handle(imageUri, getUniqueFilename(), capturandroCallback, context);
+            galleryHandler.handle(imageUri, getUniqueFilename(), capturandroCallback, context, galleryIntentResultCode);
         }
     }
 

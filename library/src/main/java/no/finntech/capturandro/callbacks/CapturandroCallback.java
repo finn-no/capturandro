@@ -10,5 +10,5 @@ public interface CapturandroCallback {
     void onCameraImportFailure(Exception e);
     void onGalleryImportFailure(Exception e);
 
-    void onImportSuccess(Bitmap bitmap);
+    void onImportSuccess(Bitmap bitmap, int resultCode);
 }
