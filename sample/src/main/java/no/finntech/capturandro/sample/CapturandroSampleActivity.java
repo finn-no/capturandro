@@ -41,7 +41,7 @@ public class CapturandroSampleActivity extends Activity implements CapturandroCa
     }
 
     public void addFromCameraClick(View v) {
-        capturandro.importImageFromCamera(this, CAMERA_RESULT_CODE);
+        capturandro.importImageFromCamera(this, CAMERA_RESULT_CODE, 1920);
     }
 
     public void addFromGalleryClick(View v) {
