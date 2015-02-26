@@ -12,45 +12,77 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
 
 public class BitmapUtil {
-
-    public static int STORED_IMAGE_WIDTH = 1280;
-    public static int STORED_IMAGE_HEIGHT = 720;
 
     private BitmapUtil() {
     }
 
-    public static Bitmap getProcessedBitmap(File inFile) {
-        // Store Exif information as it is not kept when image is copied
-        ExifInterface exifInterface = BitmapUtil.getExifFromFile(inFile);
-
-        if (exifInterface != null) {
-            return BitmapUtil.resizeAndRotateBitmapFromFile(inFile, exifInterface, STORED_IMAGE_WIDTH, STORED_IMAGE_HEIGHT);
-        } else {
-            return BitmapUtil.decodeBitmap(inFile, STORED_IMAGE_WIDTH, STORED_IMAGE_HEIGHT);
-        }
+    public static Bitmap getProcessedBitmap(File inFile, int longestSide) {
+        // Decode -scaled- bitmap before rotating it. Makes things more memory friendly.
+        Bitmap bitmap = decodeBitmapFile(inFile, longestSide);
+        return resizeAndRotateBitmap(bitmap, longestSide, getOrientation(inFile));
     }
 
-    // Courtesy of Fedor / Thomas Vervest
-    // (http://stackoverflow.com/questions/477572/android-strange-out-of-memory-issue-while-loading-an-image-to-a-bitmap-object/823966#823966)
-    public static Bitmap decodeBitmap(File file, int width, int height) throws IllegalArgumentException {
+    public static Bitmap getProcessedBitmap(InputStream inputStream, int longestSide) {
+        // We can't decode from a stream twice, meaning we can't decode just the metadata
+        // then do the downsampling, so we might as well just decode directly, then resize.
+        // This uses more memory, so it'd be nice if we found a better way.
+        Bitmap bitmap = BitmapFactory.decodeStream(inputStream);
+        return resizeAndRotateBitmap(bitmap, longestSide, 0);
+    }
+
+    private static Bitmap resizeAndRotateBitmap(Bitmap sourceBitmap, int specifiedLongestSide, int orientation) {
+        Matrix transformationMatrix = new Matrix();
+
+        if (specifiedLongestSide > 0) {
+            int longestSide = Math.max(sourceBitmap.getWidth(), sourceBitmap.getHeight());
+            int shortestSide = Math.min(sourceBitmap.getWidth(), sourceBitmap.getHeight());
+            float ratio = (float) longestSide / shortestSide;
+            longestSide = specifiedLongestSide;
+            shortestSide = (int) (longestSide / ratio);
+
+            int newWidth = sourceBitmap.getWidth();
+            int newHeight = sourceBitmap.getHeight();
+
+            if (isPortrait(newWidth, newHeight)) {
+                newHeight = longestSide;
+                newWidth = shortestSide;
+            } else {
+                newHeight = shortestSide;
+                newWidth = longestSide;
+            }
+
+            float scaleWidth = ((float) newWidth) / sourceBitmap.getWidth();
+            float scaleHeight = ((float) newHeight) / sourceBitmap.getHeight();
+
+            transformationMatrix.preScale(scaleWidth, scaleHeight);
+        }
+
+        transformationMatrix.postRotate(orientation);
+        // Bitmap is immutable, so we need to create a new one based on the transformation
+        Bitmap dstBitmap = Bitmap.createBitmap(sourceBitmap, 0, 0, sourceBitmap.getWidth(), sourceBitmap.getHeight(), transformationMatrix, true);
+
+        sourceBitmap.recycle();
+        return dstBitmap;
+    }
+
+    // Loosely based on code found in
+    // http://stackoverflow.com/questions/477572/android-strange-out-of-memory-issue-while-loading-an-image-to-a-bitmap-object/823966#823966
+    private static Bitmap decodeBitmapFile(File file, int longestSide) throws IllegalArgumentException {
         FileInputStream inJustDecodeBoundsImageStream = null;
         FileInputStream inSampleSizeImageStream = null;
         try {
+
             // Decode image size
+            inJustDecodeBoundsImageStream = new FileInputStream(file);
             BitmapFactory.Options o = new BitmapFactory.Options();
             o.inJustDecodeBounds = true;
-
-            inJustDecodeBoundsImageStream = new FileInputStream(file);
             BitmapFactory.decodeStream(inJustDecodeBoundsImageStream, null, o);
 
-            // Decode withCameraCallback inSampleSize
             BitmapFactory.Options o2 = new BitmapFactory.Options();
-
-            // Parameters are width and height, but these are equal in our case
-            o2.inSampleSize = calculateInSampleSize(o, width, height);
-
+            o2.inSampleSize = calculateInSampleSize(o, longestSide);
             inSampleSizeImageStream = new FileInputStream(file);
 
             return BitmapFactory.decodeStream(inSampleSizeImageStream, null, o2);
@@ -62,35 +94,27 @@ public class BitmapUtil {
         }
     }
 
-    private static int calculateInSampleSize(BitmapFactory.Options options, int reqWidth, int reqHeight) {
+    private static int calculateInSampleSize(BitmapFactory.Options options, int longestSide) {
         // Raw height and width of image
         final int height = options.outHeight;
         final int width = options.outWidth;
-        int inSampleSize = 1;
 
-        if (height > reqHeight || width > reqWidth) {
-            if (width > height) {
-                inSampleSize = Math.round((float) height / (float) reqHeight);
-            } else {
-                inSampleSize = Math.round((float) width / (float) reqWidth);
-            }
-
-            // Handle images withCameraCallback weird aspect ratios
-            final float totalPixels = width * height;
-            final float totalReqPixelsCap = reqWidth * reqHeight * 2;
-
-            while (totalPixels / (inSampleSize * inSampleSize) > totalReqPixelsCap) {
-                inSampleSize++;
-            }
+        int sampleSize = Math.max(height, width) / longestSide;
+        if (sampleSize > 1) {
+            return sampleSize;
+        } else {
+            return 1;
         }
-
-        return inSampleSize;
     }
 
-    public static Bitmap resizeAndRotateBitmapFromFile(File inFile, ExifInterface exif, int reqWidth, int reqHeight) {
+    private static boolean isPortrait(int width, int height) {
+        return height > width;
+    }
+
+    private static int getOrientation(File file) {
+        ExifInterface exif = getExifFromFile(file);
 
         int orientation = exif.getAttributeInt(ExifInterface.TAG_ORIENTATION, 1);
-
         switch (orientation) {
             case 0:
                 break;
@@ -107,23 +131,10 @@ public class BitmapUtil {
                 orientation = 0;
                 break;
         }
-
-        if (orientation != 0) {
-            Matrix transformationMatrix = new Matrix();
-            transformationMatrix.postRotate(orientation);
-
-            // Decode -scaled- bitmap before rotating it. Makes things more memory friendly.
-            Bitmap sourceBitmap = BitmapUtil.decodeBitmap(inFile, reqWidth, reqHeight);
-
-            // Bitmap is immutable, so we need to create a new one based on the transformation
-            return Bitmap.createBitmap(sourceBitmap, 0, 0, sourceBitmap.getWidth(), sourceBitmap.getHeight(), transformationMatrix, true);
-        } else {
-            // Orientation for image is correct, so we just return it
-            return decodeBitmap(inFile, reqWidth, reqHeight);
-        }
+        return orientation;
     }
 
-    public static ExifInterface getExifFromFile(File file) {
+    private static ExifInterface getExifFromFile(File file) {
         try {
             return new ExifInterface(file.getPath());
         } catch (IOException e) {

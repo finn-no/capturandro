@@ -33,14 +33,16 @@ public class GalleryHandler {
     private CapturandroCallback capturandroCallback;
     private Context context;
     private int resultCode;
+    private int longestSide;
 
     public GalleryHandler() {
     }
 
-    public void handle(Uri selectedImage, String filename, CapturandroCallback capturandroCallback, Context context, int resultCode) throws CapturandroException {
+    public void handle(Uri selectedImage, String filename, CapturandroCallback capturandroCallback, Context context, int resultCode, int longestSide) throws CapturandroException {
         this.capturandroCallback = capturandroCallback;
         this.context = context;
         this.resultCode = resultCode;
+        this.longestSide = longestSide;
 
         if (isUserAttemptingToAddVideo(selectedImage)) {
             capturandroCallback.onCameraImportFailure(new CapturandroException("Video files are not supported"));
@@ -79,7 +81,7 @@ public class GalleryHandler {
         InputStream stream;
         try {
             stream = context.getContentResolver().openInputStream(selectedImage);
-            Bitmap bitmap = BitmapFactory.decodeStream(stream);
+            Bitmap bitmap = BitmapUtil.getProcessedBitmap(stream, longestSide);
             stream.close();
             return bitmap;
         } catch (IOException e) {
@@ -109,7 +111,7 @@ public class GalleryHandler {
         int columnIndex;
         columnIndex = cursor.getColumnIndex(MediaStore.MediaColumns.DISPLAY_NAME);
         if (columnIndex != -1) {
-            new DownloadRemoteImageAsyncTask(context, selectedImage, filename, capturandroCallback, resultCode).execute();
+            new DownloadRemoteImageAsyncTask(context, selectedImage, filename, capturandroCallback, resultCode, longestSide).execute();
         }
         return null;
     }
@@ -117,7 +119,7 @@ public class GalleryHandler {
     private Bitmap fetchLocalGalleryImageFile(Cursor cursor, int columnIndex) {
         // Resize and save so that the image is still kept if the user deletes the original image from Gallery
         File inFile = new File(cursor.getString(columnIndex));
-        Bitmap bitmap = BitmapUtil.getProcessedBitmap(inFile);
+        Bitmap bitmap = BitmapUtil.getProcessedBitmap(inFile, longestSide);
         inFile.delete();
         return bitmap;
     }

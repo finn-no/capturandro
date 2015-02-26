@@ -21,18 +21,20 @@ public class DownloadRemoteImageAsyncTask extends AsyncTask<Void, Integer, Captu
 
     private CapturandroCallback capturandroCallback;
     private final int resultCode;
+    private final int longestSide;
     protected Context context;
 
     private Uri uri;
     private String filename;
     private Bitmap bitmap;
 
-    public DownloadRemoteImageAsyncTask(Context context, Uri imageToDownloadUri, String filename, CapturandroCallback capturandroCallback, int resultCode) {
+    public DownloadRemoteImageAsyncTask(Context context, Uri imageToDownloadUri, String filename, CapturandroCallback capturandroCallback, int resultCode, int longestSide) {
         this.context = context;
         this.uri = imageToDownloadUri;
         this.filename = filename;
         this.capturandroCallback = capturandroCallback;
         this.resultCode = resultCode;
+        this.longestSide = longestSide;
     }
 
     @Override
@@ -61,7 +63,7 @@ public class DownloadRemoteImageAsyncTask extends AsyncTask<Void, Integer, Captu
             IOUtils.closeQuietly(inputStream);
         }
 
-        bitmap = BitmapUtil.getProcessedBitmap(file);
+        bitmap = BitmapUtil.getProcessedBitmap(file, longestSide);
         file.delete();
 
         return capturandroCallback;

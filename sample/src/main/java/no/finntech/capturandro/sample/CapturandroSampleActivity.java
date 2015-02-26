@@ -10,6 +10,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import no.finntech.capturandro.Capturandro;
@@ -44,7 +45,7 @@ public class CapturandroSampleActivity extends Activity implements CapturandroCa
     }
 
     public void addFromGalleryClick(View v) {
-        capturandro.importImageFromGallery(this, GALLERY_RESULT_CODE);
+        capturandro.importImageFromGallery(this, GALLERY_RESULT_CODE, 400);
     }
 
     @Override
@@ -70,6 +71,9 @@ public class CapturandroSampleActivity extends Activity implements CapturandroCa
         imageView.setLayoutParams(new ViewGroup.LayoutParams(
                 ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT));
         ((LinearLayout) findViewById(R.id.image_list)).addView(imageView);
+        TextView textView = new TextView(this);
+        textView.setText("width: " + bitmap.getWidth() + ", height: " + bitmap.getHeight());
+        ((LinearLayout) findViewById(R.id.image_list)).addView(textView);
     }
 
     @Override

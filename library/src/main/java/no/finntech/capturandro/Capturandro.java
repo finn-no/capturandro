@@ -25,6 +25,7 @@ public class Capturandro {
     private final Context context;
     private CapturandroCallback capturandroCallback;
     private String filename;
+    private int longestSide;
 
     public static class Builder {
         private CapturandroCallback capturandroCallback;
@@ -61,19 +62,29 @@ public class Capturandro {
     }
 
     public void importImageFromCamera(Activity activity, int resultCode) {
+        importImageFromCamera(activity, resultCode, -1);
+    }
+
+    public void importImageFromCamera(Activity activity, int resultCode, int longestSide) {
         Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
         this.filename = getUniqueFilename();
         intent.putExtra(MediaStore.EXTRA_OUTPUT, Uri.fromFile(new File(context.getExternalCacheDir(), filename)));
+        this.longestSide = longestSide;
         this.cameraIntentResultCode = resultCode;
         activity.startActivityForResult(intent, resultCode);
     }
 
     public void importImageFromGallery(Activity activity, int resultCode) {
+        importImageFromGallery(activity, resultCode, -1);
+    }
+
+    public void importImageFromGallery(Activity activity, int resultCode, int longestSide) {
         // it probably would have been better if this tried both these methods and presented them
         // both in a chooser instead of falling back when the main one isn't found. With this approach,
         // if you have, say, google's photos (g+) and the cyanogenmod gallery installed, the latter
         // will never be queried.
         this.galleryIntentResultCode = resultCode;
+        this.longestSide = longestSide;
         Intent intent;
         try {
             intent = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
@@ -95,7 +106,7 @@ public class Capturandro {
             if (resultCode == Activity.RESULT_OK) {
                 if (filename != null) {
                     File file = new File(context.getExternalCacheDir(), filename);
-                    final Bitmap bitmap = BitmapUtil.getProcessedBitmap(file);
+                    final Bitmap bitmap = BitmapUtil.getProcessedBitmap(file, longestSide);
                     file.delete();
                     capturandroCallback.onImportSuccess(bitmap, reqCode);
                 } else {
@@ -108,7 +119,7 @@ public class Capturandro {
                 if (filename == null) {
                     filename = getUniqueFilename();
                 }
-                galleryHandler.handle(selectedImage, filename, capturandroCallback, context, reqCode);
+                galleryHandler.handle(selectedImage, filename, capturandroCallback, context, reqCode, longestSide);
             }
         }
     }
@@ -136,7 +147,7 @@ public class Capturandro {
 
     private void handleSendImages(ArrayList<Uri> imagesFromIntent) throws CapturandroException {
         for (Uri imageUri : imagesFromIntent) {
-            galleryHandler.handle(imageUri, getUniqueFilename(), capturandroCallback, context, galleryIntentResultCode);
+            galleryHandler.handle(imageUri, getUniqueFilename(), capturandroCallback, context, galleryIntentResultCode, longestSide);
         }
     }
 
