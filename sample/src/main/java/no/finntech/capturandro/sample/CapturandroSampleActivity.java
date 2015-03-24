@@ -14,9 +14,9 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import no.finntech.capturandro.Capturandro;
-import no.finntech.capturandro.asynctask.DownloadRemoteImageAsyncTask;
-import no.finntech.capturandro.callbacks.CapturandroCallback;
-import no.finntech.capturandro.exception.CapturandroException;
+import no.finntech.capturandro.DownloadRemoteImageAsyncTask;
+import no.finntech.capturandro.CapturandroCallback;
+import no.finntech.capturandro.CapturandroException;
 
 public class CapturandroSampleActivity extends Activity implements CapturandroCallback {
     private static final int CAMERA_RESULT_CODE = 1;
@@ -31,7 +31,7 @@ public class CapturandroSampleActivity extends Activity implements CapturandroCa
         setContentView(R.layout.main);
 
             capturandro = new Capturandro.Builder(this)
-                .withCameraCallback(this)
+                .withCallback(this)
                 .build();
         try {
             capturandro.handleSharedImageIntent(getIntent());

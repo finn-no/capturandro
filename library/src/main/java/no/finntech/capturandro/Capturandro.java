@@ -11,11 +11,9 @@ import android.provider.MediaStore;
 import java.io.File;
 import java.util.ArrayList;
 
-import no.finntech.capturandro.callbacks.CapturandroCallback;
-import no.finntech.capturandro.exception.CapturandroException;
-import no.finntech.capturandro.util.BitmapUtil;
-import no.finntech.capturandro.util.GalleryHandler;
-
+/*
+* This is the main class for the capturandro library.
+*/
 public class Capturandro {
 
     private final GalleryHandler galleryHandler = new GalleryHandler();
@@ -27,6 +25,18 @@ public class Capturandro {
     private String filename;
     private int longestSide;
 
+    /*
+    * Builder class for specifying options to capturandro.
+    *
+    * @param capturandroCallback    Implementation of CapturandroCallback, whose methods are called
+    *                               when an image is captured or capturing fails.
+    *
+    * @param filenamePrefix         Prefix for temporary files stored in the Activity's external
+    *                               cache dir. This file is usually removed by capturandro after
+    *                               import.
+    *
+    * @param context                Android context
+    */
     public static class Builder {
         private CapturandroCallback capturandroCallback;
         private String filenamePrefix;
@@ -36,7 +46,7 @@ public class Capturandro {
             this.context = context;
         }
 
-        public Builder withCameraCallback(CapturandroCallback capturandroCallback) {
+        public Builder withCallback(CapturandroCallback capturandroCallback) {
             this.capturandroCallback = capturandroCallback;
             return this;
         }
@@ -61,10 +71,29 @@ public class Capturandro {
         this.capturandroCallback = capturandroCallback;
     }
 
+
+    /*
+    * Start the import process for getting an image from the camera.
+    *
+    * @param activity   Android Activity. Needed for sending Intent to get pictures from camera.
+    *
+    * @param resultCode The integer code which will be returned in onActivityResult. Handy
+    *                   for knowing where in your app the particular import request comes from.
+    */
     public void importImageFromCamera(Activity activity, int resultCode) {
         importImageFromCamera(activity, resultCode, -1);
     }
 
+    /*
+    * Start the import process for getting an image from the camera.
+    *
+    * @param activity   Android Activity. Needed for sending Intent to get pictures from camera.
+    *
+    * @param resultCode The integer code which will be returned in onActivityResult. Handy
+    *                   for knowing where in your app the particular import request comes from.
+    *
+    * @param longestSide    The longest side of the imported image in either direction
+    */
     public void importImageFromCamera(Activity activity, int resultCode, int longestSide) {
         Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
         this.filename = getUniqueFilename();
@@ -74,10 +103,16 @@ public class Capturandro {
         activity.startActivityForResult(intent, resultCode);
     }
 
+    /*
+    *
+    */
     public void importImageFromGallery(Activity activity, int resultCode) {
         importImageFromGallery(activity, resultCode, -1);
     }
 
+    /*
+    *
+    */
     public void importImageFromGallery(Activity activity, int resultCode, int longestSide) {
         // it probably would have been better if this tried both these methods and presented them
         // both in a chooser instead of falling back when the main one isn't found. With this approach,
@@ -97,6 +132,13 @@ public class Capturandro {
         }
     }
 
+    /*
+    * onActivityResult needs to be called by the same Activity which is passed to either of the
+    * import methods. It calls on the methods in the CapturandroCallback implementation sent to
+    * the Capturandro constructor.
+    *
+    * @throws CapturandroException
+    */
     public void onActivityResult(int reqCode, int resultCode, Intent intent) throws CapturandroException {
         if (capturandroCallback == null) {
             throw new IllegalStateException("Unable to import image. Have you implemented CapturandroCallback?");
@@ -123,6 +165,8 @@ public class Capturandro {
             }
         }
     }
+
+//  ----------------
 
     private String getUniqueFilename() {
         if (filenamePrefix != null) {

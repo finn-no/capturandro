@@ -1,4 +1,4 @@
-package no.finntech.capturandro.util;
+package no.finntech.capturandro;
 
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -14,18 +14,18 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 
-public class BitmapUtil {
+class BitmapUtil {
 
     private BitmapUtil() {
     }
 
-    public static Bitmap getProcessedBitmap(File inFile, int longestSide) {
+    static Bitmap getProcessedBitmap(File inFile, int longestSide) {
         // Decode -scaled- bitmap before rotating it. Makes things more memory friendly.
         Bitmap bitmap = decodeBitmapFile(inFile, longestSide);
         return resizeAndRotateBitmap(bitmap, longestSide, getOrientation(inFile));
     }
 
-    public static Bitmap getProcessedBitmap(InputStream inputStream, int longestSide) {
+    static Bitmap getProcessedBitmap(InputStream inputStream, int longestSide) {
         // We can't decode from a stream twice, meaning we can't decode just the metadata
         // then do the downsampling, so we might as well just decode directly, then resize.
         // This uses more memory, so it'd be nice if we found a better way.

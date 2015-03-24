@@ -1,4 +1,4 @@
-package no.finntech.capturandro.exception;
+package no.finntech.capturandro;
 
 public class CapturandroException extends Exception {
     private final String message;

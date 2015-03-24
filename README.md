@@ -1,9 +1,5 @@
 # Capturandro
 
-
-Warning: While this is a working project, it is still work in progress, and we don't recommend using it in production
-just yet.
-
 ## About
 Capturandro is an easy-to-use image import library for Android.
 
@@ -20,14 +16,13 @@ Use Capturandro.Builder() to create an instance of Capturandro and set parameter
 ```java
 Capturandro capturandro = new Capturandro.Builder()
         .withCapturandroCallback(yourCapturandroCallback) // See documentation below
-        .withStorageDirectoryPath("/path/to/some/storage/dir"); // Discouraged! App uses getExternalCacheDir() by default
         .withFilenamePrefix("capturandro") // Prefixed filenames with "capturandro_", e.g. "capturandro_001.jpg"
         .build();
 ```
 
 ### CapturandroCallback
 In order for Capturandro to function, you need to implement CapturandroCallback in your application. This class describes
-methods that will be called when you initiate an image import:
+methods that will be called when you the import is completed (or failed):
 ```java
     void onCameraImportSuccess(String filename);
     void onCameraImportFailure(Exception e);
@@ -42,20 +37,22 @@ methods that will be called when you initiate an image import:
 ```
 
 ### Image import
-Give you instance is named capturandro, imports can be done as follows:
+Assuming your Capturandro instance is named capturandro, imports can be done as follows:
 
 ```java
 // Import from camera with given output filename:
-capturandro.importImageFromCamera("savedCameraImage.jpg");
-
-// Import from camera, storing image with semi-random filename: [filenamePrefix] + System.currentTimeMillis() + ".jpg"
-capturandro.importImageFromCamera();
-
-// Import from gallery with given output filename:
-capturandro.importImageFromGallery("savedGalleryImage.jpg")
+capturandro.importImageFromCamera(activity, 1024);  // current android activity and max 1024
+                                                    // pixels in either direction
 
 // Import from gallery, storing image with semi-random filename: [filenamePrefix] + System.currentTimeMillis() + ".jpg"
 capturandro.importImageFromGallery()
+```
+
+### Update your AndroidManifest.xml
+Make sure to have the following permission lines in your AndroidManifest.xml
+```xml
+<uses-permission android:name="android.permission.CAMERA" />
+<uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
 ```
 
 ### Send/share intents
@@ -79,16 +76,9 @@ passing the intent passed in to the activity:
 capturandro.handleImageIfSentFromGallery(getIntent());
 ```
 
-### Update your AndroidManifest.xml
-Make sure to have the following permission lines in your AndroidManifest.xml
-```xml
-<uses-permission android:name="android.permission.INTERNET" />
-<uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
-```
-
 ## License
 
-    Copyright (C) 2013 FINN.no.
+    Copyright (C) 2015 FINN.no.
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.

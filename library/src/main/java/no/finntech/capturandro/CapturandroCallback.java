@@ -1,8 +1,6 @@
-package no.finntech.capturandro.callbacks;
+package no.finntech.capturandro;
 
 import android.graphics.Bitmap;
-
-import no.finntech.capturandro.asynctask.DownloadRemoteImageAsyncTask;
 
 public interface CapturandroCallback {
     void onGalleryImportStarted(DownloadRemoteImageAsyncTask downloadRemoteImageAsyncTask, String filename);

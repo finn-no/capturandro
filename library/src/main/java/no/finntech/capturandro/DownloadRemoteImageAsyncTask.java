@@ -1,4 +1,4 @@
-package no.finntech.capturandro.asynctask;
+package no.finntech.capturandro;
 
 import android.content.Context;
 import android.graphics.Bitmap;
@@ -13,9 +13,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.URL;
-
-import no.finntech.capturandro.callbacks.CapturandroCallback;
-import no.finntech.capturandro.util.BitmapUtil;
 
 public class DownloadRemoteImageAsyncTask extends AsyncTask<Void, Integer, CapturandroCallback> {
 

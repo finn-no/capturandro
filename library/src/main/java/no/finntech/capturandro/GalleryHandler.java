@@ -1,9 +1,8 @@
-package no.finntech.capturandro.util;
+package no.finntech.capturandro;
 
 import android.content.Context;
 import android.database.Cursor;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.provider.MediaStore;
 
@@ -11,11 +10,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 
-import no.finntech.capturandro.asynctask.DownloadRemoteImageAsyncTask;
-import no.finntech.capturandro.callbacks.CapturandroCallback;
-import no.finntech.capturandro.exception.CapturandroException;
-
-public class GalleryHandler {
+class GalleryHandler {
 
     private final static String[] PICASA_CONTENT_PROVIDERS = {
             "content://com.android.gallery3d.provider",
@@ -35,10 +30,10 @@ public class GalleryHandler {
     private int resultCode;
     private int longestSide;
 
-    public GalleryHandler() {
+    GalleryHandler() {
     }
 
-    public void handle(Uri selectedImage, String filename, CapturandroCallback capturandroCallback, Context context, int resultCode, int longestSide) throws CapturandroException {
+    void handle(Uri selectedImage, String filename, CapturandroCallback capturandroCallback, Context context, int resultCode, int longestSide) throws CapturandroException {
         this.capturandroCallback = capturandroCallback;
         this.context = context;
         this.resultCode = resultCode;
@@ -50,31 +45,28 @@ public class GalleryHandler {
         }
 
         if (selectedImage != null) {
-            final Bitmap bitmap = handleImageFromGallery(selectedImage, filename);
-            capturandroCallback.onImportSuccess(bitmap, resultCode);
-        }
-    }
-
-    private Bitmap handleImageFromGallery(Uri selectedImage, String filename) {
-        if (selectedImage.getScheme().equals("file")) {
-            return fetchOldStyleGalleryImageFile(selectedImage);
-        }
-
-        Cursor cursor = context.getContentResolver().query(selectedImage, FILE_PATH_COLUMNS, null, null, null);
-        if (cursor != null) {
-            cursor.moveToFirst();
-            int columnIndex = cursor.getColumnIndex(MediaStore.MediaColumns.DATA);
-
-            if (isPicasaAndroid3Image(selectedImage) || imageIsRemote(cursor)) {
-                fetchPicasaAndroid3Image(selectedImage, filename, cursor);
-            } else if ("content".equals(selectedImage.getScheme())) {
-                return fetchOldStyleGalleryImageFile(selectedImage);
-            } else {
-                return fetchLocalGalleryImageFile(cursor, columnIndex);
+            if (selectedImage.getScheme().equals("file")) {
+                Bitmap bitmap = fetchOldStyleGalleryImageFile(selectedImage);
+                capturandroCallback.onImportSuccess(bitmap, resultCode);
             }
-            cursor.close();
+
+            Cursor cursor = context.getContentResolver().query(selectedImage, FILE_PATH_COLUMNS, null, null, null);
+            if (cursor != null) {
+                cursor.moveToFirst();
+                int columnIndex = cursor.getColumnIndex(MediaStore.MediaColumns.DATA);
+
+                if (isPicasaAndroid3Image(selectedImage) || imageIsRemote(cursor)) {
+                    fetchPicasaAndroid3Image(selectedImage, filename, cursor);
+                } else if ("content".equals(selectedImage.getScheme())) {
+                    Bitmap bitmap = fetchOldStyleGalleryImageFile(selectedImage);
+                    capturandroCallback.onImportSuccess(bitmap, resultCode);
+                } else {
+                    Bitmap bitmap = fetchLocalGalleryImageFile(cursor, columnIndex);
+                    capturandroCallback.onImportSuccess(bitmap, resultCode);
+                }
+                cursor.close();
+            }
         }
-        return null;
     }
 
     private Bitmap fetchOldStyleGalleryImageFile(Uri selectedImage) {
