@@ -58,7 +58,7 @@ public class CapturandroSampleActivity extends Activity implements CapturandroCa
     }
 
     @Override
-    public void onImportSuccess(Bitmap bitmap, int resultCode) {
+    public void onImportSuccess(Bitmap bitmap, int requestCode) {
         if (progressDialog != null && progressDialog.isShowing()) {
             progressDialog.dismiss();
         }
@@ -77,7 +77,7 @@ public class CapturandroSampleActivity extends Activity implements CapturandroCa
     }
 
     @Override
-    public void onCameraImportFailure(Exception e) {
+    public void onCameraImportFailure(Exception e, int requestCode) {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setTitle(getString(R.string.dialog_title_error_importing_image))
                 .setMessage(getString(R.string.dialog_message_error_importing_image))
@@ -85,12 +85,12 @@ public class CapturandroSampleActivity extends Activity implements CapturandroCa
     }
 
     @Override
-    public void onGalleryImportStarted(DownloadRemoteImageAsyncTask downloadRemoteImageAsyncTask, String filename) {
+    public void onGalleryImportStarted(DownloadRemoteImageAsyncTask downloadRemoteImageAsyncTask, String filename, int requestCode) {
         progressDialog = ProgressDialog.show(this, "Downloading", "Downloading image from Picasa...", true);
     }
 
     @Override
-    public void onGalleryImportFailure(Exception e) {
+    public void onGalleryImportFailure(Exception e, int requestCode) {
         progressDialog.dismiss();
         Toast.makeText(this, "Import of image(s) from Picasa failed", Toast.LENGTH_LONG).show();
     }

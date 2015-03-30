@@ -1,12 +1,5 @@
 package no.finntech.capturandro;
 
-import android.content.Context;
-import android.graphics.Bitmap;
-import android.net.Uri;
-import android.os.AsyncTask;
-
-import org.apache.commons.io.IOUtils;
-
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -14,10 +7,17 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.URL;
 
+import android.content.Context;
+import android.graphics.Bitmap;
+import android.net.Uri;
+import android.os.AsyncTask;
+
+import org.apache.commons.io.IOUtils;
+
 public class DownloadRemoteImageAsyncTask extends AsyncTask<Void, Integer, CapturandroCallback> {
 
-    private CapturandroCallback capturandroCallback;
-    private final int resultCode;
+    private final CapturandroCallback capturandroCallback;
+    private final int requestCode;
     private final int longestSide;
     protected Context context;
 
@@ -25,18 +25,18 @@ public class DownloadRemoteImageAsyncTask extends AsyncTask<Void, Integer, Captu
     private String filename;
     private Bitmap bitmap;
 
-    public DownloadRemoteImageAsyncTask(Context context, Uri imageToDownloadUri, String filename, CapturandroCallback capturandroCallback, int resultCode, int longestSide) {
+    public DownloadRemoteImageAsyncTask(Context context, Uri imageToDownloadUri, String filename, CapturandroCallback capturandroCallback, int requestCode, int longestSide) {
         this.context = context;
         this.uri = imageToDownloadUri;
         this.filename = filename;
         this.capturandroCallback = capturandroCallback;
-        this.resultCode = resultCode;
+        this.requestCode = requestCode;
         this.longestSide = longestSide;
     }
 
     @Override
     protected void onPreExecute() {
-        capturandroCallback.onGalleryImportStarted(this, filename);
+        capturandroCallback.onGalleryImportStarted(this, filename, requestCode);
     }
 
     @Override
@@ -54,7 +54,7 @@ public class DownloadRemoteImageAsyncTask extends AsyncTask<Void, Integer, Captu
             outputStream = new FileOutputStream(file);
             IOUtils.copy(inputStream, outputStream);
         } catch (IOException e) {
-            capturandroCallback.onGalleryImportFailure(e);
+            capturandroCallback.onGalleryImportFailure(e, requestCode);
         } finally {
             IOUtils.closeQuietly(outputStream);
             IOUtils.closeQuietly(inputStream);
@@ -68,10 +68,6 @@ public class DownloadRemoteImageAsyncTask extends AsyncTask<Void, Integer, Captu
 
     @Override
     protected void onPostExecute(CapturandroCallback callback) {
-        callback.onImportSuccess(bitmap, resultCode);
-    }
-
-    public void setCapturandroCallback(CapturandroCallback capturandroCallback) {
-        this.capturandroCallback = capturandroCallback;
+        callback.onImportSuccess(bitmap, requestCode);
     }
 }

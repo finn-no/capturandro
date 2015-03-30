@@ -139,29 +139,29 @@ public class Capturandro {
     *
     * @throws CapturandroException
     */
-    public void onActivityResult(int reqCode, int resultCode, Intent intent) throws CapturandroException {
+    public void onActivityResult(int requestCode, int resultCode, Intent intent) throws CapturandroException {
         if (capturandroCallback == null) {
             throw new IllegalStateException("Unable to import image. Have you implemented CapturandroCallback?");
         }
 
-        if (reqCode == cameraIntentResultCode) {
+        if (requestCode == cameraIntentResultCode) {
             if (resultCode == Activity.RESULT_OK) {
                 if (filename != null) {
                     File file = new File(context.getExternalCacheDir(), filename);
                     final Bitmap bitmap = BitmapUtil.getProcessedBitmap(file, longestSide);
                     file.delete();
-                    capturandroCallback.onImportSuccess(bitmap, reqCode);
+                    capturandroCallback.onImportSuccess(bitmap, requestCode);
                 } else {
-                    capturandroCallback.onCameraImportFailure(new CapturandroException("Could not get image from camera"));
+                    capturandroCallback.onCameraImportFailure(new CapturandroException("Could not get image from camera"), requestCode);
                 }
             }
-        } else if (reqCode == galleryIntentResultCode) {
+        } else if (requestCode == galleryIntentResultCode) {
             if (resultCode == Activity.RESULT_OK && intent != null) { //sometimes intent is null when gallery app is opened
                 Uri selectedImage = intent.getData();
                 if (filename == null) {
                     filename = getUniqueFilename();
                 }
-                galleryHandler.handle(selectedImage, filename, capturandroCallback, context, reqCode, longestSide);
+                galleryHandler.handle(selectedImage, filename, capturandroCallback, context, requestCode, longestSide);
             }
         }
     }

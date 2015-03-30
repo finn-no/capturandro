@@ -27,27 +27,27 @@ class GalleryHandler {
 
     private CapturandroCallback capturandroCallback;
     private Context context;
-    private int resultCode;
+    private int requestCode;
     private int longestSide;
 
     GalleryHandler() {
     }
 
-    void handle(Uri selectedImage, String filename, CapturandroCallback capturandroCallback, Context context, int resultCode, int longestSide) throws CapturandroException {
+    void handle(Uri selectedImage, String filename, CapturandroCallback capturandroCallback, Context context, int requestCode, int longestSide) throws CapturandroException {
         this.capturandroCallback = capturandroCallback;
         this.context = context;
-        this.resultCode = resultCode;
+        this.requestCode = requestCode;
         this.longestSide = longestSide;
 
         if (isUserAttemptingToAddVideo(selectedImage)) {
-            capturandroCallback.onCameraImportFailure(new CapturandroException("Video files are not supported"));
+            capturandroCallback.onCameraImportFailure(new CapturandroException("Video files are not supported"), requestCode);
             return;
         }
 
         if (selectedImage != null) {
             if (selectedImage.getScheme().equals("file")) {
                 Bitmap bitmap = fetchOldStyleGalleryImageFile(selectedImage);
-                capturandroCallback.onImportSuccess(bitmap, resultCode);
+                capturandroCallback.onImportSuccess(bitmap, requestCode);
             }
 
             Cursor cursor = context.getContentResolver().query(selectedImage, FILE_PATH_COLUMNS, null, null, null);
@@ -59,10 +59,10 @@ class GalleryHandler {
                     fetchPicasaAndroid3Image(selectedImage, filename, cursor);
                 } else if ("content".equals(selectedImage.getScheme())) {
                     Bitmap bitmap = fetchOldStyleGalleryImageFile(selectedImage);
-                    capturandroCallback.onImportSuccess(bitmap, resultCode);
+                    capturandroCallback.onImportSuccess(bitmap, requestCode);
                 } else {
                     Bitmap bitmap = fetchLocalGalleryImageFile(cursor, columnIndex);
-                    capturandroCallback.onImportSuccess(bitmap, resultCode);
+                    capturandroCallback.onImportSuccess(bitmap, requestCode);
                 }
                 cursor.close();
             }
@@ -103,7 +103,7 @@ class GalleryHandler {
         int columnIndex;
         columnIndex = cursor.getColumnIndex(MediaStore.MediaColumns.DISPLAY_NAME);
         if (columnIndex != -1) {
-            new DownloadRemoteImageAsyncTask(context, selectedImage, filename, capturandroCallback, resultCode, longestSide).execute();
+            new DownloadRemoteImageAsyncTask(context, selectedImage, filename, capturandroCallback, requestCode, longestSide).execute();
         }
         return null;
     }
