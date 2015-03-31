@@ -1,14 +1,14 @@
 package no.finntech.capturandro;
 
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+
 import android.content.Context;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.net.Uri;
 import android.provider.MediaStore;
-
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
 
 class GalleryHandler {
 
@@ -25,29 +25,27 @@ class GalleryHandler {
             MediaStore.MediaColumns.DISPLAY_NAME
     };
 
-    private CapturandroCallback capturandroCallback;
+    private CapturandroCallback.ImageHandler imageHandler;
     private Context context;
-    private int requestCode;
     private int longestSide;
 
     GalleryHandler() {
     }
 
-    void handle(Uri selectedImage, String filename, CapturandroCallback capturandroCallback, Context context, int requestCode, int longestSide) throws CapturandroException {
-        this.capturandroCallback = capturandroCallback;
+    void handle(Uri selectedImage, String filename, CapturandroCallback.ImageHandler imageHandler, Context context, int longestSide) throws CapturandroException {
+        this.imageHandler = imageHandler;
         this.context = context;
-        this.requestCode = requestCode;
         this.longestSide = longestSide;
 
         if (isUserAttemptingToAddVideo(selectedImage)) {
-            capturandroCallback.onCameraImportFailure(new CapturandroException("Video files are not supported"), requestCode);
+            imageHandler.onCameraImportFailure(new CapturandroException("Video files are not supported"));
             return;
         }
 
         if (selectedImage != null) {
             if (selectedImage.getScheme().equals("file")) {
                 Bitmap bitmap = fetchOldStyleGalleryImageFile(selectedImage);
-                capturandroCallback.onImportSuccess(bitmap, requestCode);
+                imageHandler.onImportSuccess(bitmap);
             }
 
             Cursor cursor = context.getContentResolver().query(selectedImage, FILE_PATH_COLUMNS, null, null, null);
@@ -59,10 +57,10 @@ class GalleryHandler {
                     fetchPicasaAndroid3Image(selectedImage, filename, cursor);
                 } else if ("content".equals(selectedImage.getScheme())) {
                     Bitmap bitmap = fetchOldStyleGalleryImageFile(selectedImage);
-                    capturandroCallback.onImportSuccess(bitmap, requestCode);
+                    imageHandler.onImportSuccess(bitmap);
                 } else {
                     Bitmap bitmap = fetchLocalGalleryImageFile(cursor, columnIndex);
-                    capturandroCallback.onImportSuccess(bitmap, requestCode);
+                    imageHandler.onImportSuccess(bitmap);
                 }
                 cursor.close();
             }
@@ -103,7 +101,7 @@ class GalleryHandler {
         int columnIndex;
         columnIndex = cursor.getColumnIndex(MediaStore.MediaColumns.DISPLAY_NAME);
         if (columnIndex != -1) {
-            new DownloadRemoteImageAsyncTask(context, selectedImage, filename, capturandroCallback, requestCode, longestSide).execute();
+            new DownloadRemoteImageAsyncTask(context, selectedImage, filename, imageHandler, longestSide).execute();
         }
         return null;
     }

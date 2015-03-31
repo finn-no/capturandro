@@ -14,10 +14,9 @@ import android.os.AsyncTask;
 
 import org.apache.commons.io.IOUtils;
 
-public class DownloadRemoteImageAsyncTask extends AsyncTask<Void, Integer, CapturandroCallback> {
+public class DownloadRemoteImageAsyncTask extends AsyncTask<Void, Integer, Void> {
 
-    private final CapturandroCallback capturandroCallback;
-    private final int requestCode;
+    private final CapturandroCallback.ImageHandler imageHandler;
     private final int longestSide;
     protected Context context;
 
@@ -25,22 +24,21 @@ public class DownloadRemoteImageAsyncTask extends AsyncTask<Void, Integer, Captu
     private String filename;
     private Bitmap bitmap;
 
-    public DownloadRemoteImageAsyncTask(Context context, Uri imageToDownloadUri, String filename, CapturandroCallback capturandroCallback, int requestCode, int longestSide) {
+    public DownloadRemoteImageAsyncTask(Context context, Uri imageToDownloadUri, String filename, CapturandroCallback.ImageHandler imageHandler, int longestSide) {
         this.context = context;
         this.uri = imageToDownloadUri;
         this.filename = filename;
-        this.capturandroCallback = capturandroCallback;
-        this.requestCode = requestCode;
+        this.imageHandler = imageHandler;
         this.longestSide = longestSide;
     }
 
     @Override
     protected void onPreExecute() {
-        capturandroCallback.onGalleryImportStarted(this, filename, requestCode);
+        imageHandler.onGalleryImportStarted(filename);
     }
 
     @Override
-    protected CapturandroCallback doInBackground(Void... voids) {
+    protected Void doInBackground(Void... voids) {
         File file = new File(context.getExternalCacheDir(), filename);
         OutputStream outputStream = null;
         InputStream inputStream = null;
@@ -54,7 +52,7 @@ public class DownloadRemoteImageAsyncTask extends AsyncTask<Void, Integer, Captu
             outputStream = new FileOutputStream(file);
             IOUtils.copy(inputStream, outputStream);
         } catch (IOException e) {
-            capturandroCallback.onGalleryImportFailure(e, requestCode);
+            imageHandler.onGalleryImportFailure(e);
         } finally {
             IOUtils.closeQuietly(outputStream);
             IOUtils.closeQuietly(inputStream);
@@ -62,12 +60,11 @@ public class DownloadRemoteImageAsyncTask extends AsyncTask<Void, Integer, Captu
 
         bitmap = BitmapUtil.getProcessedBitmap(file, longestSide);
         file.delete();
-
-        return capturandroCallback;
+        return null;
     }
 
     @Override
-    protected void onPostExecute(CapturandroCallback callback) {
-        callback.onImportSuccess(bitmap, requestCode);
+    protected void onPostExecute(Void o) {
+        imageHandler.onImportSuccess(bitmap);
     }
 }

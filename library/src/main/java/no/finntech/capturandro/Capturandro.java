@@ -143,6 +143,7 @@ public class Capturandro {
         if (capturandroCallback == null) {
             throw new IllegalStateException("Unable to import image. Have you implemented CapturandroCallback?");
         }
+        CapturandroCallback.ImageHandler imageHandler = capturandroCallback.createHandler(requestCode);
 
         if (requestCode == cameraIntentResultCode) {
             if (resultCode == Activity.RESULT_OK) {
@@ -150,9 +151,9 @@ public class Capturandro {
                     File file = new File(context.getExternalCacheDir(), filename);
                     final Bitmap bitmap = BitmapUtil.getProcessedBitmap(file, longestSide);
                     file.delete();
-                    capturandroCallback.onImportSuccess(bitmap, requestCode);
+                    imageHandler.onImportSuccess(bitmap);
                 } else {
-                    capturandroCallback.onCameraImportFailure(new CapturandroException("Could not get image from camera"), requestCode);
+                    imageHandler.onCameraImportFailure(new CapturandroException("Could not get image from camera"));
                 }
             }
         } else if (requestCode == galleryIntentResultCode) {
@@ -161,7 +162,7 @@ public class Capturandro {
                 if (filename == null) {
                     filename = getUniqueFilename();
                 }
-                galleryHandler.handle(selectedImage, filename, capturandroCallback, context, requestCode, longestSide);
+                galleryHandler.handle(selectedImage, filename, imageHandler, context, longestSide);
             }
         }
     }
@@ -173,25 +174,6 @@ public class Capturandro {
             return filenamePrefix + System.currentTimeMillis() + ".jpg";
         } else {
             return "capturandro-" + System.currentTimeMillis() + ".jpg";
-        }
-    }
-
-    public void handleSharedImageIntent(Intent intent) throws CapturandroException {
-        if (isReceivingImage(intent)) {
-            handleSendImages(getImagesFromIntent(intent));
-        }
-    }
-
-    private boolean isReceivingImage(Intent intent) {
-        String action = intent.getAction();
-        String mimeType = intent.getType();
-        return (Intent.ACTION_SEND.equals(action) || Intent.ACTION_SEND_MULTIPLE.equals(action))
-                && (mimeType != null && mimeType.startsWith("image"));
-    }
-
-    private void handleSendImages(ArrayList<Uri> imagesFromIntent) throws CapturandroException {
-        for (Uri imageUri : imagesFromIntent) {
-            galleryHandler.handle(imageUri, getUniqueFilename(), capturandroCallback, context, galleryIntentResultCode, longestSide);
         }
     }
 

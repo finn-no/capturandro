@@ -14,7 +14,6 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import no.finntech.capturandro.Capturandro;
-import no.finntech.capturandro.DownloadRemoteImageAsyncTask;
 import no.finntech.capturandro.CapturandroCallback;
 import no.finntech.capturandro.CapturandroException;
 
@@ -30,14 +29,9 @@ public class CapturandroSampleActivity extends Activity implements CapturandroCa
         super.onCreate(savedInstanceState);
         setContentView(R.layout.main);
 
-            capturandro = new Capturandro.Builder(this)
+        capturandro = new Capturandro.Builder(this)
                 .withCallback(this)
                 .build();
-        try {
-            capturandro.handleSharedImageIntent(getIntent());
-        } catch (CapturandroException e) {
-            Toast.makeText(this, e.toString(), Toast.LENGTH_SHORT).show();
-        }
     }
 
     public void addFromCameraClick(View v) {
@@ -57,14 +51,6 @@ public class CapturandroSampleActivity extends Activity implements CapturandroCa
         }
     }
 
-    @Override
-    public void onImportSuccess(Bitmap bitmap, int requestCode) {
-        if (progressDialog != null && progressDialog.isShowing()) {
-            progressDialog.dismiss();
-        }
-        showImage(bitmap);
-    }
-
     private void showImage(Bitmap bitmap) {
         ImageView imageView = new ImageView(this);
         imageView.setImageBitmap(bitmap);
@@ -76,23 +62,36 @@ public class CapturandroSampleActivity extends Activity implements CapturandroCa
         ((LinearLayout) findViewById(R.id.image_list)).addView(textView);
     }
 
-    @Override
-    public void onCameraImportFailure(Exception e, int requestCode) {
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setTitle(getString(R.string.dialog_title_error_importing_image))
-                .setMessage(getString(R.string.dialog_message_error_importing_image))
-                .create();
-    }
 
     @Override
-    public void onGalleryImportStarted(DownloadRemoteImageAsyncTask downloadRemoteImageAsyncTask, String filename, int requestCode) {
-        progressDialog = ProgressDialog.show(this, "Downloading", "Downloading image from Picasa...", true);
-    }
+    public ImageHandler createHandler(int requestCode) {
+        return new ImageHandler().execute(new ImageResponseCallback() {
+            @Override
+            public void onGalleryImportStarted(String filename) {
+                progressDialog = ProgressDialog.show(CapturandroSampleActivity.this, "Downloading", "Downloading image from Picasa...", true);
+            }
 
-    @Override
-    public void onGalleryImportFailure(Exception e, int requestCode) {
-        progressDialog.dismiss();
-        Toast.makeText(this, "Import of image(s) from Picasa failed", Toast.LENGTH_LONG).show();
-    }
+            @Override
+            public void onCameraImportFailure(Exception e) {
+                AlertDialog.Builder builder = new AlertDialog.Builder(CapturandroSampleActivity.this);
+                builder.setTitle(getString(R.string.dialog_title_error_importing_image))
+                        .setMessage(getString(R.string.dialog_message_error_importing_image))
+                        .create();
+            }
 
+            @Override
+            public void onGalleryImportFailure(Exception e) {
+                progressDialog.dismiss();
+                Toast.makeText(CapturandroSampleActivity.this, "Import of image(s) from Picasa failed", Toast.LENGTH_LONG).show();
+            }
+
+            @Override
+            public void onImportSuccess(Bitmap bitmap) {
+                if (progressDialog != null && progressDialog.isShowing()) {
+                    progressDialog.dismiss();
+                }
+                showImage(bitmap);
+            }
+        });
+    }
 }
