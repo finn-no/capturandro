@@ -66,13 +66,21 @@ public class CapturandroSampleActivity extends Activity implements CapturandroCa
     @Override
     public ImageHandler createHandler(int requestCode) {
         return new ImageHandler().execute(new ImageResponseCallback() {
+            private int downloads = 0;
+
             @Override
             public void onGalleryImportStarted(String filename) {
-                progressDialog = ProgressDialog.show(CapturandroSampleActivity.this, "Downloading", "Downloading image from Picasa...", true);
+                downloads++;
+                if (progressDialog == null) {
+                    progressDialog = ProgressDialog.show(CapturandroSampleActivity.this, "Downloading", "Downloading image from Picasa...", true);
+                }
+                if (!progressDialog.isShowing()) {
+                    progressDialog.show();
+                }
             }
 
             @Override
-            public void onCameraImportFailure(Exception e) {
+            public void onCameraImportFailure(String filename, Exception e) {
                 AlertDialog.Builder builder = new AlertDialog.Builder(CapturandroSampleActivity.this);
                 builder.setTitle(getString(R.string.dialog_title_error_importing_image))
                         .setMessage(getString(R.string.dialog_message_error_importing_image))
@@ -80,14 +88,18 @@ public class CapturandroSampleActivity extends Activity implements CapturandroCa
             }
 
             @Override
-            public void onGalleryImportFailure(Exception e) {
-                progressDialog.dismiss();
+            public void onGalleryImportFailure(String filename, Exception e) {
+                downloads--;
+                if (downloads == 0) {
+                    progressDialog.dismiss();
+                }
                 Toast.makeText(CapturandroSampleActivity.this, "Import of image(s) from Picasa failed", Toast.LENGTH_LONG).show();
             }
 
             @Override
-            public void onImportSuccess(Bitmap bitmap) {
-                if (progressDialog != null && progressDialog.isShowing()) {
+            public void onImportSuccess(String filename, Bitmap bitmap) {
+                downloads--;
+                if (progressDialog != null && progressDialog.isShowing() && downloads == 0) {
                     progressDialog.dismiss();
                 }
                 showImage(bitmap);

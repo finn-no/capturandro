@@ -15,7 +15,6 @@ import android.os.AsyncTask;
 import org.apache.commons.io.IOUtils;
 
 public class DownloadRemoteImageAsyncTask extends AsyncTask<Void, Integer, Void> {
-
     private final CapturandroCallback.ImageHandler imageHandler;
     private final int longestSide;
     protected Context context;
@@ -23,6 +22,7 @@ public class DownloadRemoteImageAsyncTask extends AsyncTask<Void, Integer, Void>
     private Uri uri;
     private String filename;
     private Bitmap bitmap;
+    private IOException exception;
 
     public DownloadRemoteImageAsyncTask(Context context, Uri imageToDownloadUri, String filename, CapturandroCallback.ImageHandler imageHandler, int longestSide) {
         this.context = context;
@@ -52,7 +52,7 @@ public class DownloadRemoteImageAsyncTask extends AsyncTask<Void, Integer, Void>
             outputStream = new FileOutputStream(file);
             IOUtils.copy(inputStream, outputStream);
         } catch (IOException e) {
-            imageHandler.onGalleryImportFailure(e);
+            exception = e;
         } finally {
             IOUtils.closeQuietly(outputStream);
             IOUtils.closeQuietly(inputStream);
@@ -65,6 +65,10 @@ public class DownloadRemoteImageAsyncTask extends AsyncTask<Void, Integer, Void>
 
     @Override
     protected void onPostExecute(Void o) {
-        imageHandler.onImportSuccess(bitmap);
+        if (exception != null) {
+            imageHandler.onGalleryImportFailure(filename, exception);
+        } else {
+            imageHandler.onImportSuccess(filename, bitmap);
+        }
     }
 }

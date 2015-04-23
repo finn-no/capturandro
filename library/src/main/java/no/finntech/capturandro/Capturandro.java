@@ -1,15 +1,17 @@
 package no.finntech.capturandro;
 
+import java.io.File;
+import java.util.ArrayList;
+
 import android.app.Activity;
 import android.content.ActivityNotFoundException;
+import android.content.ClipData;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.net.Uri;
+import android.os.Build;
 import android.provider.MediaStore;
-
-import java.io.File;
-import java.util.ArrayList;
 
 /*
 * This is the main class for the capturandro library.
@@ -17,12 +19,11 @@ import java.util.ArrayList;
 public class Capturandro {
 
     private final GalleryHandler galleryHandler = new GalleryHandler();
-    private final String filenamePrefix;
     private int galleryIntentResultCode;
     private int cameraIntentResultCode;
     private final Context context;
     private CapturandroCallback capturandroCallback;
-    private String filename;
+    private String cameraFilename;
     private int longestSide;
 
     /*
@@ -64,7 +65,6 @@ public class Capturandro {
     public Capturandro(Builder builder) {
         this.context = builder.context;
         this.capturandroCallback = builder.capturandroCallback;
-        this.filenamePrefix = builder.filenamePrefix;
     }
 
     public void setCapturandroCallback(CapturandroCallback capturandroCallback) {
@@ -96,8 +96,8 @@ public class Capturandro {
     */
     public void importImageFromCamera(Activity activity, int resultCode, int longestSide) {
         Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-        this.filename = getUniqueFilename();
-        intent.putExtra(MediaStore.EXTRA_OUTPUT, Uri.fromFile(new File(context.getExternalCacheDir(), filename)));
+        this.cameraFilename = getUniqueFilename();
+        intent.putExtra(MediaStore.EXTRA_OUTPUT, Uri.fromFile(new File(context.getExternalCacheDir(), cameraFilename)));
         this.longestSide = longestSide;
         this.cameraIntentResultCode = resultCode;
         activity.startActivityForResult(intent, resultCode);
@@ -114,6 +114,10 @@ public class Capturandro {
     *
     */
     public void importImageFromGallery(Activity activity, int resultCode, int longestSide) {
+        importImageFromGallery(activity, resultCode, longestSide, true);
+    }
+
+    public void importImageFromGallery(Activity activity, int resultCode, int longestSide, boolean multiselect) {
         // it probably would have been better if this tried both these methods and presented them
         // both in a chooser instead of falling back when the main one isn't found. With this approach,
         // if you have, say, google's photos (g+) and the cyanogenmod gallery installed, the latter
@@ -123,11 +127,17 @@ public class Capturandro {
         Intent intent;
         try {
             intent = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+            if (Build.VERSION.SDK_INT >= 18) {
+                intent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true);
+            }
             activity.startActivityForResult(intent, galleryIntentResultCode);
         } catch (ActivityNotFoundException e) {
             intent = new Intent(Intent.ACTION_GET_CONTENT);
             intent.setType("image/*");
             intent.addCategory(Intent.CATEGORY_OPENABLE);
+            if (Build.VERSION.SDK_INT >= 18 && multiselect) {
+                intent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true);
+            }
             activity.startActivityForResult(intent, galleryIntentResultCode);
         }
     }
@@ -147,34 +157,40 @@ public class Capturandro {
 
         if (requestCode == cameraIntentResultCode) {
             if (resultCode == Activity.RESULT_OK) {
-                if (filename != null) {
-                    File file = new File(context.getExternalCacheDir(), filename);
+                if (cameraFilename != null) {
+                    File file = new File(context.getExternalCacheDir(), cameraFilename);
                     final Bitmap bitmap = BitmapUtil.getProcessedBitmap(file, longestSide);
                     file.delete();
-                    imageHandler.onImportSuccess(bitmap);
+                    imageHandler.onImportSuccess(cameraFilename, bitmap);
                 } else {
-                    imageHandler.onCameraImportFailure(new CapturandroException("Could not get image from camera"));
+                    imageHandler.onCameraImportFailure(cameraFilename, new CapturandroException("Could not get image from camera"));
                 }
             }
         } else if (requestCode == galleryIntentResultCode) {
             if (resultCode == Activity.RESULT_OK && intent != null) { //sometimes intent is null when gallery app is opened
-                Uri selectedImage = intent.getData();
-                if (filename == null) {
-                    filename = getUniqueFilename();
+                if (!multiGalleryImport(intent, imageHandler)) {
+                    Uri selectedImage = intent.getData();
+                    galleryHandler.handle(selectedImage, getUniqueFilename(), imageHandler, context, longestSide);
                 }
-                galleryHandler.handle(selectedImage, filename, imageHandler, context, longestSide);
             }
         }
     }
 
-//  ----------------
+    private boolean multiGalleryImport(Intent intent, CapturandroCallback.ImageHandler imageHandler) {
+        if (Build.VERSION.SDK_INT >= 18) {
+            ClipData clipData = intent.getClipData();
+            if (clipData != null && clipData.getItemCount() > 0) {
+                new DownloadMultipleAsyncTask(context.getContentResolver(), imageHandler, longestSide, clipData).execute();
+                return true;
+            }
+        }
+        return false;
+    }
+
+    //  ----------------
 
     private String getUniqueFilename() {
-        if (filenamePrefix != null) {
-            return filenamePrefix + System.currentTimeMillis() + ".jpg";
-        } else {
-            return "capturandro-" + System.currentTimeMillis() + ".jpg";
-        }
+        return "capturandro-" + System.currentTimeMillis() + ".jpg";
     }
 
     private ArrayList<Uri> getImagesFromIntent(Intent intent) {

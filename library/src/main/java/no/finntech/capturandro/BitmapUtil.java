@@ -33,6 +33,10 @@ class BitmapUtil {
         return resizeAndRotateBitmap(bitmap, longestSide, 0);
     }
 
+    static Bitmap getProcessedBitmap(Bitmap bitmap, int longestSide) {
+        return resizeAndRotateBitmap(bitmap, longestSide, 0);
+    }
+
     private static Bitmap resizeAndRotateBitmap(Bitmap sourceBitmap, int specifiedLongestSide, int orientation) {
         Matrix transformationMatrix = new Matrix();
 

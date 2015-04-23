@@ -9,11 +9,11 @@ public interface CapturandroCallback {
     interface ImageResponseCallback {
         void onGalleryImportStarted(String filename);
 
-        void onCameraImportFailure(Exception e);
+        void onCameraImportFailure(String filename, Exception e);
 
-        void onGalleryImportFailure(Exception e);
+        void onGalleryImportFailure(String filename, Exception e);
 
-        void onImportSuccess(Bitmap bitmap);
+        void onImportSuccess(String filename, Bitmap bitmap);
     }
 
     class ImageHandler implements ImageResponseCallback {
@@ -48,33 +48,33 @@ public interface CapturandroCallback {
         }
 
         @Override
-        public void onCameraImportFailure(final Exception e) {
+        public void onCameraImportFailure(final String filename, final Exception e) {
             deliverResult = new DeliverResult() {
                 @Override
                 public void execute(ImageResponseCallback callback) {
-                    callback.onCameraImportFailure(e);
+                    callback.onCameraImportFailure(filename, e);
                 }
             };
             attemptDeliver();
         }
 
         @Override
-        public void onGalleryImportFailure(final Exception e) {
+        public void onGalleryImportFailure(final String filename, final Exception e) {
             deliverResult = new DeliverResult() {
                 @Override
                 public void execute(ImageResponseCallback callback) {
-                    callback.onGalleryImportFailure(e);
+                    callback.onGalleryImportFailure(filename, e);
                 }
             };
             attemptDeliver();
         }
 
         @Override
-        public void onImportSuccess(final Bitmap bitmap) {
+        public void onImportSuccess(final String filename, final Bitmap bitmap) {
             deliverResult = new DeliverResult() {
                 @Override
                 public void execute(ImageResponseCallback callback) {
-                    callback.onImportSuccess(bitmap);
+                    callback.onImportSuccess(filename, bitmap);
                 }
             };
             attemptDeliver();

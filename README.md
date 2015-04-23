@@ -76,6 +76,16 @@ passing the intent passed in to the activity:
 capturandro.handleImageIfSentFromGallery(getIntent());
 ```
 
+###
+For testing locally while developing use:
+```groovy
+compile('no.finntech:capturandro:0.0.8@aar') {
+    transitive = true
+    changing = true
+}
+```
+
+
 ## License
 
     Copyright (C) 2015 FINN.no.
