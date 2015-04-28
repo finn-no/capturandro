@@ -127,7 +127,7 @@ public class Capturandro {
         Intent intent;
         try {
             intent = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
-            if (Build.VERSION.SDK_INT >= 18) {
+            if (Build.VERSION.SDK_INT >= 18 && multiselect) {
                 intent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true);
             }
             activity.startActivityForResult(intent, galleryIntentResultCode);
