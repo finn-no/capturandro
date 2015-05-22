@@ -44,8 +44,7 @@ class GalleryHandler {
         }
 
         if (selectedImage != null) {
-            Integer orientation = getOrientation(context.getContentResolver(), selectedImage);
-            orientation.toString();
+            int orientation = getOrientation(context.getContentResolver(), selectedImage);
 
             if (selectedImage.getScheme().equals("file")) {
                 Bitmap bitmap = fetchOldStyleGalleryImageFile(selectedImage, orientation);

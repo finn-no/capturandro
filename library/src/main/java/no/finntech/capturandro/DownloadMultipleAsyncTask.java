@@ -51,7 +51,7 @@ class DownloadMultipleAsyncTask extends AsyncTask<Void, String, Void> {
             final String filename = filenames.get(i);
             try {
                 Uri uri = clipData.getItemAt(i).getUri();
-                Integer orientation = GalleryHandler.getOrientation(contentResolver, uri);
+                int orientation = GalleryHandler.getOrientation(contentResolver, uri);
                 Bitmap mediaStoreBitmap = MediaStore.Images.Media.getBitmap(contentResolver, uri);
                 final Bitmap bitmap = BitmapUtil.getProcessedBitmap(mediaStoreBitmap, longestSide, orientation);
                 handler.post(new Runnable() {
