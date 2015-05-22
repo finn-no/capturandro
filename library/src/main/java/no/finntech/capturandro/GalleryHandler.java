@@ -1,14 +1,15 @@
 package no.finntech.capturandro;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-
+import android.content.ContentResolver;
 import android.content.Context;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.net.Uri;
 import android.provider.MediaStore;
+
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
 
 class GalleryHandler {
 
@@ -43,8 +44,11 @@ class GalleryHandler {
         }
 
         if (selectedImage != null) {
+            Integer orientation = getOrientation(context.getContentResolver(), selectedImage);
+            orientation.toString();
+
             if (selectedImage.getScheme().equals("file")) {
-                Bitmap bitmap = fetchOldStyleGalleryImageFile(selectedImage);
+                Bitmap bitmap = fetchOldStyleGalleryImageFile(selectedImage, orientation);
                 imageHandler.onImportSuccess(filename, bitmap);
             }
 
@@ -56,10 +60,10 @@ class GalleryHandler {
                 if (isPicasaAndroid3Image(selectedImage) || imageIsRemote(cursor)) {
                     fetchPicasaAndroid3Image(selectedImage, filename, cursor);
                 } else if ("content".equals(selectedImage.getScheme())) {
-                    Bitmap bitmap = fetchOldStyleGalleryImageFile(selectedImage);
+                    Bitmap bitmap = fetchOldStyleGalleryImageFile(selectedImage, orientation);
                     imageHandler.onImportSuccess(filename, bitmap);
                 } else {
-                    Bitmap bitmap = fetchLocalGalleryImageFile(cursor, columnIndex);
+                    Bitmap bitmap = fetchLocalGalleryImageFile(cursor, columnIndex, orientation);
                     imageHandler.onImportSuccess(filename, bitmap);
                 }
                 cursor.close();
@@ -67,17 +71,31 @@ class GalleryHandler {
         }
     }
 
-    private Bitmap fetchOldStyleGalleryImageFile(Uri selectedImage) {
+    private Bitmap fetchOldStyleGalleryImageFile(Uri selectedImage, int orientation) {
         InputStream stream;
         try {
             stream = context.getContentResolver().openInputStream(selectedImage);
-            Bitmap bitmap = BitmapUtil.getProcessedBitmap(stream, longestSide);
+            Bitmap bitmap = BitmapUtil.getProcessedBitmap(stream, longestSide, orientation);
             stream.close();
             return bitmap;
         } catch (IOException e) {
             e.printStackTrace();
         }
         return null;
+    }
+
+    public static int getOrientation(ContentResolver contentResolver, Uri photoUri) {
+        Cursor cursor = contentResolver.query(photoUri,
+                new String[]{MediaStore.Images.ImageColumns.ORIENTATION}, null, null, null);
+        try {
+            if (cursor.moveToFirst()) {
+                return cursor.getInt(0);
+            } else {
+                return -1;
+            }
+        } finally {
+            cursor.close();
+        }
     }
 
     private boolean isPicasaAndroid3Image(Uri selectedImage) {
@@ -106,10 +124,10 @@ class GalleryHandler {
         return null;
     }
 
-    private Bitmap fetchLocalGalleryImageFile(Cursor cursor, int columnIndex) {
+    private Bitmap fetchLocalGalleryImageFile(Cursor cursor, int columnIndex, int orientation) {
         // Resize and save so that the image is still kept if the user deletes the original image from Gallery
         File inFile = new File(cursor.getString(columnIndex));
-        Bitmap bitmap = BitmapUtil.getProcessedBitmap(inFile, longestSide);
+        Bitmap bitmap = BitmapUtil.getProcessedBitmap(inFile, longestSide, orientation);
         inFile.delete();
         return bitmap;
     }

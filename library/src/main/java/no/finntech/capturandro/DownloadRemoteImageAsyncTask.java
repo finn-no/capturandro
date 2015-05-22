@@ -58,7 +58,8 @@ public class DownloadRemoteImageAsyncTask extends AsyncTask<Void, Integer, Void>
             IOUtils.closeQuietly(inputStream);
         }
 
-        bitmap = BitmapUtil.getProcessedBitmap(file, longestSide);
+        Integer orientation = GalleryHandler.getOrientation(context.getContentResolver(), uri);
+        bitmap = BitmapUtil.getProcessedBitmap(file, longestSide, orientation);
         file.delete();
         return null;
     }
