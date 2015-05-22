@@ -8,6 +8,7 @@ import java.util.Random;
 import android.content.ClipData;
 import android.content.ContentResolver;
 import android.graphics.Bitmap;
+import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Handler;
 import android.os.Looper;
@@ -49,8 +50,10 @@ class DownloadMultipleAsyncTask extends AsyncTask<Void, String, Void> {
         for (int i = 0; i < clipData.getItemCount(); i++) {
             final String filename = filenames.get(i);
             try {
-                Bitmap mediaStoreBitmap = MediaStore.Images.Media.getBitmap(contentResolver, clipData.getItemAt(i).getUri());
-                final Bitmap bitmap = BitmapUtil.getProcessedBitmap(mediaStoreBitmap, longestSide);
+                Uri uri = clipData.getItemAt(i).getUri();
+                int orientation = GalleryHandler.getOrientation(contentResolver, uri);
+                Bitmap mediaStoreBitmap = MediaStore.Images.Media.getBitmap(contentResolver, uri);
+                final Bitmap bitmap = BitmapUtil.getProcessedBitmap(mediaStoreBitmap, longestSide, orientation);
                 handler.post(new Runnable() {
                     @Override
                     public void run() {

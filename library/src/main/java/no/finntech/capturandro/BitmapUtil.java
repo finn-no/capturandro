@@ -20,21 +20,25 @@ class BitmapUtil {
     }
 
     static Bitmap getProcessedBitmap(File inFile, int longestSide) {
-        // Decode -scaled- bitmap before rotating it. Makes things more memory friendly.
-        Bitmap bitmap = decodeBitmapFile(inFile, longestSide);
-        return resizeAndRotateBitmap(bitmap, longestSide, getOrientation(inFile));
+        return getProcessedBitmap(inFile, longestSide, 0);
     }
 
-    static Bitmap getProcessedBitmap(InputStream inputStream, int longestSide) {
+    static Bitmap getProcessedBitmap(File inFile, int longestSide, int orientation) {
+        // Decode -scaled- bitmap before rotating it. Makes things more memory friendly.
+        Bitmap bitmap = decodeBitmapFile(inFile, longestSide);
+        return resizeAndRotateBitmap(bitmap, longestSide, orientation);
+    }
+
+    static Bitmap getProcessedBitmap(InputStream inputStream, int longestSide, int orientation) {
         // We can't decode from a stream twice, meaning we can't decode just the metadata
         // then do the downsampling, so we might as well just decode directly, then resize.
         // This uses more memory, so it'd be nice if we found a better way.
         Bitmap bitmap = BitmapFactory.decodeStream(inputStream);
-        return resizeAndRotateBitmap(bitmap, longestSide, 0);
+        return resizeAndRotateBitmap(bitmap, longestSide, orientation);
     }
 
-    static Bitmap getProcessedBitmap(Bitmap bitmap, int longestSide) {
-        return resizeAndRotateBitmap(bitmap, longestSide, 0);
+    static Bitmap getProcessedBitmap(Bitmap bitmap, int longestSide, int orientation) {
+        return resizeAndRotateBitmap(bitmap, longestSide, orientation);
     }
 
     private static Bitmap resizeAndRotateBitmap(Bitmap sourceBitmap, int specifiedLongestSide, int orientation) {
