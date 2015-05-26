@@ -20,7 +20,7 @@ class BitmapUtil {
     }
 
     static Bitmap getProcessedBitmap(File inFile, int longestSide) {
-        return getProcessedBitmap(inFile, longestSide, 0);
+        return getProcessedBitmap(inFile, longestSide, getOrientation(inFile));
     }
 
     static Bitmap getProcessedBitmap(File inFile, int longestSide, int orientation) {
