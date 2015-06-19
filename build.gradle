@@ -1,6 +1,6 @@
 allprojects {
     group = 'no.finntech'
-    version = '0.0.12'
+    version = '0.0.13-SNAPSHOT'
 }
 
 subprojects {
