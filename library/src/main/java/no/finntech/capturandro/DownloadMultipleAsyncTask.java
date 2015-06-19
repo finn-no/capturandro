@@ -57,7 +57,7 @@ class DownloadMultipleAsyncTask extends AsyncTask<Void, String, Void> {
                 handler.post(new Runnable() {
                     @Override
                     public void run() {
-                        imageHandler.onImportSuccess(filename, bitmap);
+                        imageHandler.onGalleryImportSuccess(filename, bitmap);
                     }
                 });
             } catch (final IOException e) {

@@ -69,7 +69,7 @@ public class DownloadRemoteImageAsyncTask extends AsyncTask<Void, Integer, Void>
         if (exception != null) {
             imageHandler.onGalleryImportFailure(filename, exception);
         } else {
-            imageHandler.onImportSuccess(filename, bitmap);
+            imageHandler.onGalleryImportSuccess(filename, bitmap);
         }
     }
 }

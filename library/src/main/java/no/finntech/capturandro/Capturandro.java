@@ -161,7 +161,7 @@ public class Capturandro {
                     File file = new File(context.getExternalCacheDir(), cameraFilename);
                     final Bitmap bitmap = BitmapUtil.getProcessedBitmap(file, longestSide);
                     file.delete();
-                    imageHandler.onImportSuccess(cameraFilename, bitmap);
+                    imageHandler.onCameraImportSuccess(cameraFilename, bitmap);
                 } else {
                     imageHandler.onCameraImportFailure(cameraFilename, new CapturandroException("Could not get image from camera"));
                 }

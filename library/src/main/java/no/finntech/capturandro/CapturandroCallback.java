@@ -8,12 +8,11 @@ public interface CapturandroCallback {
 
     interface ImageResponseCallback {
         void onGalleryImportStarted(String filename);
+        void onGalleryImportFailure(String filename, Exception e);
+        void onGalleryImportSuccess(String filename, Bitmap bitmap);
 
         void onCameraImportFailure(String filename, Exception e);
-
-        void onGalleryImportFailure(String filename, Exception e);
-
-        void onImportSuccess(String filename, Bitmap bitmap);
+        void onCameraImportSuccess(String filename, Bitmap bitmap);
     }
 
     class ImageHandler implements ImageResponseCallback {
@@ -59,6 +58,17 @@ public interface CapturandroCallback {
         }
 
         @Override
+        public void onCameraImportSuccess(final String filename, final Bitmap bitmap) {
+            deliverResult = new DeliverResult() {
+                @Override
+                public void execute(ImageResponseCallback callback) {
+                    callback.onCameraImportSuccess(filename, bitmap);
+                }
+            };
+            attemptDeliver();
+        }
+
+        @Override
         public void onGalleryImportFailure(final String filename, final Exception e) {
             deliverResult = new DeliverResult() {
                 @Override
@@ -70,11 +80,11 @@ public interface CapturandroCallback {
         }
 
         @Override
-        public void onImportSuccess(final String filename, final Bitmap bitmap) {
+        public void onGalleryImportSuccess(final String filename, final Bitmap bitmap) {
             deliverResult = new DeliverResult() {
                 @Override
                 public void execute(ImageResponseCallback callback) {
-                    callback.onImportSuccess(filename, bitmap);
+                    callback.onGalleryImportSuccess(filename, bitmap);
                 }
             };
             attemptDeliver();

@@ -69,6 +69,19 @@ public class CapturandroSampleActivity extends Activity implements CapturandroCa
             private int downloads = 0;
 
             @Override
+            public void onCameraImportFailure(String filename, Exception e) {
+                AlertDialog.Builder builder = new AlertDialog.Builder(CapturandroSampleActivity.this);
+                builder.setTitle(getString(R.string.dialog_title_error_importing_image))
+                        .setMessage(getString(R.string.dialog_message_error_importing_image))
+                        .create();
+            }
+
+            @Override
+            public void onCameraImportSuccess(String filename, Bitmap bitmap) {
+                showImage(bitmap);
+            }
+
+            @Override
             public void onGalleryImportStarted(String filename) {
                 downloads++;
                 if (progressDialog == null) {
@@ -77,14 +90,6 @@ public class CapturandroSampleActivity extends Activity implements CapturandroCa
                 if (!progressDialog.isShowing()) {
                     progressDialog.show();
                 }
-            }
-
-            @Override
-            public void onCameraImportFailure(String filename, Exception e) {
-                AlertDialog.Builder builder = new AlertDialog.Builder(CapturandroSampleActivity.this);
-                builder.setTitle(getString(R.string.dialog_title_error_importing_image))
-                        .setMessage(getString(R.string.dialog_message_error_importing_image))
-                        .create();
             }
 
             @Override
@@ -97,7 +102,7 @@ public class CapturandroSampleActivity extends Activity implements CapturandroCa
             }
 
             @Override
-            public void onImportSuccess(String filename, Bitmap bitmap) {
+            public void onGalleryImportSuccess(String filename, Bitmap bitmap) {
                 downloads--;
                 if (progressDialog != null && progressDialog.isShowing() && downloads == 0) {
                     progressDialog.dismiss();

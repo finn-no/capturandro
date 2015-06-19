@@ -39,7 +39,7 @@ class GalleryHandler {
         this.longestSide = longestSide;
 
         if (isUserAttemptingToAddVideo(selectedImage)) {
-            imageHandler.onCameraImportFailure(filename, new CapturandroException("Video files are not supported"));
+            imageHandler.onGalleryImportFailure(filename, new CapturandroException("Video files are not supported"));
             return;
         }
 
@@ -48,7 +48,7 @@ class GalleryHandler {
 
             if (selectedImage.getScheme().equals("file")) {
                 Bitmap bitmap = fetchOldStyleGalleryImageFile(selectedImage, orientation);
-                imageHandler.onImportSuccess(filename, bitmap);
+                imageHandler.onGalleryImportSuccess(filename, bitmap);
             }
 
             Cursor cursor = context.getContentResolver().query(selectedImage, FILE_PATH_COLUMNS, null, null, null);
@@ -60,10 +60,10 @@ class GalleryHandler {
                     fetchPicasaAndroid3Image(selectedImage, filename, cursor);
                 } else if ("content".equals(selectedImage.getScheme())) {
                     Bitmap bitmap = fetchOldStyleGalleryImageFile(selectedImage, orientation);
-                    imageHandler.onImportSuccess(filename, bitmap);
+                    imageHandler.onGalleryImportSuccess(filename, bitmap);
                 } else {
                     Bitmap bitmap = fetchLocalGalleryImageFile(cursor, columnIndex, orientation);
-                    imageHandler.onImportSuccess(filename, bitmap);
+                    imageHandler.onGalleryImportSuccess(filename, bitmap);
                 }
                 cursor.close();
             }
