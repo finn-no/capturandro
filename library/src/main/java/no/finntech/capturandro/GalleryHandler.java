@@ -47,6 +47,7 @@ class GalleryHandler {
             int orientation = getOrientation(context.getContentResolver(), selectedImage);
 
             if (selectedImage.getScheme().equals("file")) {
+                imageHandler.onGalleryImportStarted(filename);
                 Bitmap bitmap = fetchOldStyleGalleryImageFile(selectedImage, orientation);
                 imageHandler.onGalleryImportSuccess(filename, bitmap);
             }
@@ -57,8 +58,10 @@ class GalleryHandler {
                 int columnIndex = cursor.getColumnIndex(MediaStore.MediaColumns.DATA);
 
                 if (isPicasaAndroid3Image(selectedImage) || imageIsRemote(cursor)) {
+                    imageHandler.onGalleryImportStarted(filename);
                     fetchPicasaAndroid3Image(selectedImage, filename, cursor);
                 } else if ("content".equals(selectedImage.getScheme())) {
+                    imageHandler.onGalleryImportStarted(filename);
                     Bitmap bitmap = fetchOldStyleGalleryImageFile(selectedImage, orientation);
                     imageHandler.onGalleryImportSuccess(filename, bitmap);
                 } else {
