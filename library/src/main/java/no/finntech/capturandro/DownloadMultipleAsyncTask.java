@@ -1,13 +1,13 @@
 package no.finntech.capturandro;
 
-import java.io.IOException;
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Random;
+import java.util.UUID;
 
 import android.content.ClipData;
-import android.content.ContentResolver;
-import android.graphics.Bitmap;
+import android.content.Context;
+import android.database.Cursor;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Handler;
@@ -15,66 +15,67 @@ import android.os.Looper;
 import android.provider.MediaStore;
 
 class DownloadMultipleAsyncTask extends AsyncTask<Void, String, Void> {
-    private static final Random random = new Random(1);
-    private final ContentResolver contentResolver;
     private final CapturandroCallback.ImageHandler imageHandler;
     private final int longestSide;
     private final ClipData clipData;
     private static final Handler handler = new Handler(Looper.getMainLooper());
+    private final Context context;
 
-    public DownloadMultipleAsyncTask(ContentResolver contentResolver, CapturandroCallback.ImageHandler imageHandler, int longestSide, ClipData clipData) {
+    public DownloadMultipleAsyncTask(Context context, CapturandroCallback.ImageHandler imageHandler, int longestSide, ClipData clipData) {
         this.clipData = clipData;
-        this.contentResolver = contentResolver;
+        this.context = context;
         this.imageHandler = imageHandler;
         this.longestSide = longestSide;
     }
 
     @Override
     protected Void doInBackground(Void... params) {
-        List<String> filenames = new ArrayList<>();
+        List<UUID> importIds = new ArrayList<>();
+
         for (int i = 0; i < clipData.getItemCount(); i++) {
-            filenames.add(getUniqueFilename());
+            importIds.add(UUID.randomUUID());
         }
 
         // Notify that we've started X gallery imports
         for (int i = 0; i < clipData.getItemCount(); i++) {
-            final String filename = filenames.get(i);
+            final UUID importId = importIds.get(i);
             handler.post(new Runnable() {
                 @Override
                 public void run() {
-                    imageHandler.onGalleryImportStarted(filename);
+                    imageHandler.onGalleryImportStarted(importId);
                 }
             });
         }
 
         for (int i = 0; i < clipData.getItemCount(); i++) {
-            final String filename = filenames.get(i);
-            try {
-                Uri uri = clipData.getItemAt(i).getUri();
-                int orientation = GalleryHandler.getOrientation(contentResolver, uri);
-                Bitmap mediaStoreBitmap = MediaStore.Images.Media.getBitmap(contentResolver, uri);
-                final Bitmap bitmap = BitmapUtil.getProcessedBitmap(mediaStoreBitmap, longestSide, orientation);
-                handler.post(new Runnable() {
-                    @Override
-                    public void run() {
-                        imageHandler.onGalleryImportSuccess(filename, bitmap);
-                    }
-                });
-            } catch (final IOException e) {
-                e.printStackTrace();
-                handler.post(new Runnable() {
-                    @Override
-                    public void run() {
-                        imageHandler.onGalleryImportFailure(filename, e);
-                    }
-                });
-            }
+            final UUID importId = importIds.get(i);
+            Uri uri = clipData.getItemAt(i).getUri();
+            int orientation = GalleryHandler.getOrientation(context.getContentResolver(), uri);
+            File file = new File(getRealPathFromURI(context, uri));
+            final Uri importedUri = BitmapUtil.getProcessedImage(file, longestSide, orientation);
+            handler.post(new Runnable() {
+                @Override
+                public void run() {
+                    imageHandler.onGalleryImportSuccess(importId, importedUri);
+                }
+            });
         }
-
         return null;
     }
 
-    private String getUniqueFilename() {
-        return "capturandro-" + System.currentTimeMillis() + random.nextInt() + ".jpg";
+    public String getRealPathFromURI(Context context, Uri contentUri) {
+        Cursor cursor = null;
+        try {
+            String[] proj = { MediaStore.Images.Media.DATA };
+            cursor = context.getContentResolver().query(contentUri,  proj, null, null, null);
+            int column_index = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATA);
+            cursor.moveToFirst();
+            return cursor.getString(column_index);
+        } finally {
+            if (cursor != null) {
+                cursor.close();
+            }
+        }
     }
+
 }

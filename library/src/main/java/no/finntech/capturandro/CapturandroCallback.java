@@ -1,18 +1,20 @@
 package no.finntech.capturandro;
 
-import android.graphics.Bitmap;
+import android.net.Uri;
+
+import java.util.UUID;
 
 public interface CapturandroCallback {
 
     ImageHandler createHandler(int requestCode);
 
     interface ImageResponseCallback {
-        void onGalleryImportStarted(String filename);
-        void onGalleryImportFailure(String filename, Exception e);
-        void onGalleryImportSuccess(String filename, Bitmap bitmap);
+        void onGalleryImportStarted(UUID importId);
+        void onGalleryImportFailure(UUID importId, Exception e);
+        void onGalleryImportSuccess(UUID importId, Uri uri);
 
-        void onCameraImportFailure(String filename, Exception e);
-        void onCameraImportSuccess(String filename, Bitmap bitmap);
+        void onCameraImportFailure(UUID importId, Exception e);
+        void onCameraImportSuccess(UUID importId, Uri uri);
     }
 
     class ImageHandler implements ImageResponseCallback {
@@ -36,63 +38,64 @@ public interface CapturandroCallback {
         }
 
         @Override
-        public void onGalleryImportStarted(final String filename) {
+        public void onGalleryImportStarted(final UUID importId) {
             deliverResult = new DeliverResult() {
                 @Override
                 public void execute(ImageResponseCallback callback) {
-                    callback.onGalleryImportStarted(filename);
+                    callback.onGalleryImportStarted(importId);
                 }
             };
             attemptDeliver();
         }
 
         @Override
-        public void onCameraImportFailure(final String filename, final Exception e) {
+        public void onGalleryImportFailure(final UUID importId, final Exception e) {
             deliverResult = new DeliverResult() {
                 @Override
                 public void execute(ImageResponseCallback callback) {
-                    callback.onCameraImportFailure(filename, e);
+                    callback.onGalleryImportFailure(importId, e);
                 }
             };
             attemptDeliver();
         }
 
         @Override
-        public void onCameraImportSuccess(final String filename, final Bitmap bitmap) {
+        public void onGalleryImportSuccess(final UUID importId, final Uri uri) {
             deliverResult = new DeliverResult() {
                 @Override
                 public void execute(ImageResponseCallback callback) {
-                    callback.onCameraImportSuccess(filename, bitmap);
+                    callback.onGalleryImportSuccess(importId, uri);
                 }
             };
             attemptDeliver();
         }
 
         @Override
-        public void onGalleryImportFailure(final String filename, final Exception e) {
+        public void onCameraImportFailure(final UUID importId,final Exception e) {
             deliverResult = new DeliverResult() {
                 @Override
                 public void execute(ImageResponseCallback callback) {
-                    callback.onGalleryImportFailure(filename, e);
+                    callback.onCameraImportFailure(importId, e);
                 }
             };
             attemptDeliver();
         }
 
         @Override
-        public void onGalleryImportSuccess(final String filename, final Bitmap bitmap) {
+        public void onCameraImportSuccess(final UUID importId, final Uri uri) {
             deliverResult = new DeliverResult() {
                 @Override
                 public void execute(ImageResponseCallback callback) {
-                    callback.onGalleryImportSuccess(filename, bitmap);
+                    callback.onCameraImportSuccess(importId, uri);
                 }
             };
             attemptDeliver();
         }
-
 
         interface DeliverResult {
             void execute(ImageResponseCallback callback);
         }
+
     }
+
 }

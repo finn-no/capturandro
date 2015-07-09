@@ -6,9 +6,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.URL;
+import java.util.UUID;
 
 import android.content.Context;
-import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.AsyncTask;
 
@@ -21,20 +21,22 @@ public class DownloadRemoteImageAsyncTask extends AsyncTask<Void, Integer, Void>
 
     private Uri uri;
     private String filename;
-    private Bitmap bitmap;
+    private Uri importedUri;
     private IOException exception;
+    private UUID importId;
 
-    public DownloadRemoteImageAsyncTask(Context context, Uri imageToDownloadUri, String filename, CapturandroCallback.ImageHandler imageHandler, int longestSide) {
+    public DownloadRemoteImageAsyncTask(UUID importId, Context context, Uri imageToDownloadUri, String filename, CapturandroCallback.ImageHandler imageHandler, int longestSide) {
         this.context = context;
         this.uri = imageToDownloadUri;
         this.filename = filename;
         this.imageHandler = imageHandler;
         this.longestSide = longestSide;
+        this.importId = importId;
     }
 
     @Override
     protected void onPreExecute() {
-        imageHandler.onGalleryImportStarted(filename);
+        imageHandler.onGalleryImportStarted(importId);
     }
 
     @Override
@@ -59,7 +61,7 @@ public class DownloadRemoteImageAsyncTask extends AsyncTask<Void, Integer, Void>
         }
 
         int orientation = GalleryHandler.getOrientation(context.getContentResolver(), uri);
-        bitmap = BitmapUtil.getProcessedBitmap(file, longestSide, orientation);
+        importedUri = BitmapUtil.getProcessedImage(file, longestSide, orientation);
         file.delete();
         return null;
     }
@@ -67,9 +69,9 @@ public class DownloadRemoteImageAsyncTask extends AsyncTask<Void, Integer, Void>
     @Override
     protected void onPostExecute(Void o) {
         if (exception != null) {
-            imageHandler.onGalleryImportFailure(filename, exception);
+            imageHandler.onGalleryImportFailure(importId, exception);
         } else {
-            imageHandler.onGalleryImportSuccess(filename, bitmap);
+            imageHandler.onGalleryImportSuccess(importId, importedUri);
         }
     }
 }

@@ -10,6 +10,7 @@ import android.provider.MediaStore;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.UUID;
 
 class GalleryHandler {
 
@@ -29,17 +30,19 @@ class GalleryHandler {
     private CapturandroCallback.ImageHandler imageHandler;
     private Context context;
     private int longestSide;
+    private String filename;
 
     GalleryHandler() {
     }
 
-    void handle(Uri selectedImage, String filename, CapturandroCallback.ImageHandler imageHandler, Context context, int longestSide) throws CapturandroException {
+    void handle(UUID importId, Uri selectedImage, String filename, CapturandroCallback.ImageHandler imageHandler, Context context, int longestSide) throws CapturandroException {
         this.imageHandler = imageHandler;
         this.context = context;
         this.longestSide = longestSide;
+        this.filename = filename;
 
         if (isUserAttemptingToAddVideo(selectedImage)) {
-            imageHandler.onGalleryImportFailure(filename, new CapturandroException("Video files are not supported"));
+            imageHandler.onGalleryImportFailure(importId, new CapturandroException("Video files are not supported"));
             return;
         }
 
@@ -47,9 +50,9 @@ class GalleryHandler {
             int orientation = getOrientation(context.getContentResolver(), selectedImage);
 
             if (selectedImage.getScheme().equals("file")) {
-                imageHandler.onGalleryImportStarted(filename);
-                Bitmap bitmap = fetchOldStyleGalleryImageFile(selectedImage, orientation);
-                imageHandler.onGalleryImportSuccess(filename, bitmap);
+                imageHandler.onGalleryImportStarted(importId);
+                Uri uri = fetchOldStyleGalleryImageFile(selectedImage, orientation);
+                imageHandler.onGalleryImportSuccess(importId, uri);
             }
 
             Cursor cursor = context.getContentResolver().query(selectedImage, FILE_PATH_COLUMNS, null, null, null);
@@ -58,28 +61,28 @@ class GalleryHandler {
                 int columnIndex = cursor.getColumnIndex(MediaStore.MediaColumns.DATA);
 
                 if (isPicasaAndroid3Image(selectedImage) || imageIsRemote(cursor)) {
-                    imageHandler.onGalleryImportStarted(filename);
-                    fetchPicasaAndroid3Image(selectedImage, filename, cursor);
+                    imageHandler.onGalleryImportStarted(importId);
+                    fetchPicasaAndroid3Image(importId, selectedImage, filename, cursor);
                 } else if ("content".equals(selectedImage.getScheme())) {
-                    imageHandler.onGalleryImportStarted(filename);
-                    Bitmap bitmap = fetchOldStyleGalleryImageFile(selectedImage, orientation);
-                    imageHandler.onGalleryImportSuccess(filename, bitmap);
+                    imageHandler.onGalleryImportStarted(importId);
+                    Uri uri = fetchOldStyleGalleryImageFile(selectedImage, orientation);
+                    imageHandler.onGalleryImportSuccess(importId, uri);
                 } else {
-                    Bitmap bitmap = fetchLocalGalleryImageFile(cursor, columnIndex, orientation);
-                    imageHandler.onGalleryImportSuccess(filename, bitmap);
+                    Uri uri = fetchLocalGalleryImageFile(cursor, columnIndex, orientation);
+                    imageHandler.onGalleryImportSuccess(importId, uri);
                 }
                 cursor.close();
             }
         }
     }
 
-    private Bitmap fetchOldStyleGalleryImageFile(Uri selectedImage, int orientation) {
+    private Uri fetchOldStyleGalleryImageFile(Uri selectedImage, int orientation) {
         InputStream stream;
         try {
             stream = context.getContentResolver().openInputStream(selectedImage);
-            Bitmap bitmap = BitmapUtil.getProcessedBitmap(stream, longestSide, orientation);
+            Uri uri = BitmapUtil.getProcessedImage(stream, longestSide, orientation, filename, context.getExternalCacheDir().getAbsolutePath());
             stream.close();
-            return bitmap;
+            return uri;
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -117,21 +120,21 @@ class GalleryHandler {
         return false;
     }
 
-    private Bitmap fetchPicasaAndroid3Image(Uri selectedImage, String filename, Cursor cursor) {
+    private Bitmap fetchPicasaAndroid3Image(UUID importId, Uri selectedImage, String filename, Cursor cursor) {
         int columnIndex;
         columnIndex = cursor.getColumnIndex(MediaStore.MediaColumns.DISPLAY_NAME);
         if (columnIndex != -1) {
-            new DownloadRemoteImageAsyncTask(context, selectedImage, filename, imageHandler, longestSide).execute();
+            new DownloadRemoteImageAsyncTask(importId, context, selectedImage, filename, imageHandler, longestSide).execute();
         }
         return null;
     }
 
-    private Bitmap fetchLocalGalleryImageFile(Cursor cursor, int columnIndex, int orientation) {
+    private Uri fetchLocalGalleryImageFile(Cursor cursor, int columnIndex, int orientation) {
         // Resize and save so that the image is still kept if the user deletes the original image from Gallery
         File inFile = new File(cursor.getString(columnIndex));
-        Bitmap bitmap = BitmapUtil.getProcessedBitmap(inFile, longestSide, orientation);
+        Uri uri = BitmapUtil.getProcessedImage(inFile, longestSide, orientation);
         inFile.delete();
-        return bitmap;
+        return uri;
     }
 
     private boolean isUserAttemptingToAddVideo(Uri selectedImage) {

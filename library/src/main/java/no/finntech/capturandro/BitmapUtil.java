@@ -4,6 +4,7 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Matrix;
 import android.media.ExifInterface;
+import android.net.Uri;
 import android.util.Log;
 
 import org.apache.commons.io.IOUtils;
@@ -11,6 +12,7 @@ import org.apache.commons.io.IOUtils;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
@@ -19,61 +21,51 @@ class BitmapUtil {
     private BitmapUtil() {
     }
 
-    static Bitmap getProcessedBitmap(File inFile, int longestSide) {
-        return getProcessedBitmap(inFile, longestSide, getOrientation(inFile));
+    static Uri getProcessedImage(File inFile, int longestSide) {
+        return getProcessedImage(inFile, longestSide, getOrientation(inFile));
     }
 
-    static Bitmap getProcessedBitmap(File inFile, int longestSide, int orientation) {
-        // Decode -scaled- bitmap before rotating it. Makes things more memory friendly.
-        Bitmap bitmap = decodeBitmapFile(inFile, longestSide);
-        return resizeAndRotateBitmap(bitmap, longestSide, orientation);
+    static Uri getProcessedImage(File inFile, int longestSide, int orientation) {
+        Bitmap bitmap;
+        bitmap = decodeBitmapFile(inFile, longestSide);
+        Bitmap rotatedBitmap = rotateBitmap(bitmap, orientation);
+        return saveBitmap(rotatedBitmap, inFile.getAbsoluteFile());
     }
 
-    static Bitmap getProcessedBitmap(InputStream inputStream, int longestSide, int orientation) {
-        // We can't decode from a stream twice, meaning we can't decode just the metadata
-        // then do the downsampling, so we might as well just decode directly, then resize.
-        // This uses more memory, so it'd be nice if we found a better way.
-        Bitmap bitmap = BitmapFactory.decodeStream(inputStream);
-        return resizeAndRotateBitmap(bitmap, longestSide, orientation);
-    }
+    static Uri getProcessedImage(InputStream inputStream, int longestSide, int orientation, String filename, String externalCacheDir) {
+        try {
+            File file = new File(externalCacheDir + filename);
+            FileOutputStream fos = new FileOutputStream(file);
+            IOUtils.copy(inputStream, fos);
 
-    static Bitmap getProcessedBitmap(Bitmap bitmap, int longestSide, int orientation) {
-        return resizeAndRotateBitmap(bitmap, longestSide, orientation);
-    }
-
-    private static Bitmap resizeAndRotateBitmap(Bitmap sourceBitmap, int specifiedLongestSide, int orientation) {
-        Matrix transformationMatrix = new Matrix();
-
-        if (specifiedLongestSide > 0) {
-            int longestSide = Math.max(sourceBitmap.getWidth(), sourceBitmap.getHeight());
-            int shortestSide = Math.min(sourceBitmap.getWidth(), sourceBitmap.getHeight());
-            float ratio = (float) longestSide / shortestSide;
-            longestSide = specifiedLongestSide;
-            shortestSide = (int) (longestSide / ratio);
-
-            int newWidth = sourceBitmap.getWidth();
-            int newHeight = sourceBitmap.getHeight();
-
-            if (isPortrait(newWidth, newHeight)) {
-                newHeight = longestSide;
-                newWidth = shortestSide;
-            } else {
-                newHeight = shortestSide;
-                newWidth = longestSide;
-            }
-
-            float scaleWidth = ((float) newWidth) / sourceBitmap.getWidth();
-            float scaleHeight = ((float) newHeight) / sourceBitmap.getHeight();
-
-            transformationMatrix.preScale(scaleWidth, scaleHeight);
+            Bitmap bitmap = decodeBitmapFile(file, longestSide);
+            Bitmap rotatedBitmap = rotateBitmap(bitmap, orientation);
+            return saveBitmap(rotatedBitmap, new File(externalCacheDir + filename));
+        } catch (IOException e) {
+            return Uri.EMPTY;
         }
+    }
 
+    private static Bitmap rotateBitmap(Bitmap sourceBitmap, int orientation) {
+        Matrix transformationMatrix = new Matrix();
         transformationMatrix.postRotate(orientation);
         // Bitmap is immutable, so we need to create a new one based on the transformation
-        Bitmap dstBitmap = Bitmap.createBitmap(sourceBitmap, 0, 0, sourceBitmap.getWidth(), sourceBitmap.getHeight(), transformationMatrix, true);
+        Bitmap bitmap = Bitmap.createBitmap(sourceBitmap, 0, 0, sourceBitmap.getWidth(), sourceBitmap.getHeight(), transformationMatrix, true);
+        return bitmap;
+    }
 
-        sourceBitmap.recycle();
-        return dstBitmap;
+    public static Uri saveBitmap(Bitmap bitmap, File filenameToSave) throws IllegalArgumentException {
+        FileOutputStream out = null;
+        int compressionPercentage = Capturandro.DEFAULT_STORED_IMAGE_COMPRESSION_PERCENT;
+        try {
+            out = new FileOutputStream(filenameToSave);
+            bitmap.compress(Bitmap.CompressFormat.JPEG, compressionPercentage, out);
+        } catch (FileNotFoundException e) {
+            throw new IllegalArgumentException(e.getMessage(), e);
+        } finally {
+            IOUtils.closeQuietly(out);
+        }
+        return Uri.fromFile(filenameToSave);
     }
 
     // Loosely based on code found in
@@ -89,6 +81,7 @@ class BitmapUtil {
             o.inJustDecodeBounds = true;
             BitmapFactory.decodeStream(inJustDecodeBoundsImageStream, null, o);
 
+            // Decode actual image
             BitmapFactory.Options o2 = new BitmapFactory.Options();
             o2.inSampleSize = calculateInSampleSize(o, longestSide);
             inSampleSizeImageStream = new FileInputStream(file);
@@ -113,10 +106,6 @@ class BitmapUtil {
         } else {
             return 1;
         }
-    }
-
-    private static boolean isPortrait(int width, int height) {
-        return height > width;
     }
 
     private static int getOrientation(File file) {
