@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
+import java.util.UUID;
 
 import android.content.ClipData;
 import android.content.ContentResolver;
@@ -32,32 +33,36 @@ class DownloadMultipleAsyncTask extends AsyncTask<Void, String, Void> {
     @Override
     protected Void doInBackground(Void... params) {
         List<String> filenames = new ArrayList<>();
+        List<UUID> importIds = new ArrayList<>();
+
         for (int i = 0; i < clipData.getItemCount(); i++) {
             filenames.add(getUniqueFilename());
+            importIds.add(UUID.randomUUID());
         }
 
         // Notify that we've started X gallery imports
         for (int i = 0; i < clipData.getItemCount(); i++) {
-            final String filename = filenames.get(i);
+            final UUID importId = importIds.get(i);
             handler.post(new Runnable() {
                 @Override
                 public void run() {
-                    imageHandler.onGalleryImportStarted(filename);
+                    imageHandler.onGalleryImportStarted(importId);
                 }
             });
         }
 
         for (int i = 0; i < clipData.getItemCount(); i++) {
             final String filename = filenames.get(i);
+            final UUID importId = importIds.get(i);
             try {
                 Uri uri = clipData.getItemAt(i).getUri();
                 int orientation = GalleryHandler.getOrientation(contentResolver, uri);
                 Bitmap mediaStoreBitmap = MediaStore.Images.Media.getBitmap(contentResolver, uri);
-                final Bitmap bitmap = BitmapUtil.getProcessedBitmap(mediaStoreBitmap, longestSide, orientation);
+                final Uri importedUri = BitmapUtil.getProcessedImage(mediaStoreBitmap, longestSide, orientation, filename);
                 handler.post(new Runnable() {
                     @Override
                     public void run() {
-                        imageHandler.onGalleryImportSuccess(filename, bitmap);
+                        imageHandler.onGalleryImportSuccess(importId, importedUri);
                     }
                 });
             } catch (final IOException e) {
@@ -65,12 +70,11 @@ class DownloadMultipleAsyncTask extends AsyncTask<Void, String, Void> {
                 handler.post(new Runnable() {
                     @Override
                     public void run() {
-                        imageHandler.onGalleryImportFailure(filename, e);
+                        imageHandler.onGalleryImportFailure(importId, e);
                     }
                 });
             }
         }
-
         return null;
     }
 

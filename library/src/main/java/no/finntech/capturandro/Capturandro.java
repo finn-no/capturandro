@@ -1,22 +1,24 @@
 package no.finntech.capturandro;
 
-import java.io.File;
-import java.util.ArrayList;
-
 import android.app.Activity;
 import android.content.ActivityNotFoundException;
 import android.content.ClipData;
 import android.content.Context;
 import android.content.Intent;
-import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Build;
 import android.provider.MediaStore;
+
+import java.io.File;
+import java.util.ArrayList;
+import java.util.UUID;
 
 /*
 * This is the main class for the capturandro library.
 */
 public class Capturandro {
+
+    public static final int DEFAULT_STORED_IMAGE_COMPRESSION_PERCENT = 75;
 
     private final GalleryHandler galleryHandler = new GalleryHandler();
     private int galleryIntentResultCode;
@@ -154,29 +156,29 @@ public class Capturandro {
             throw new IllegalStateException("Unable to import image. Have you implemented CapturandroCallback?");
         }
         CapturandroCallback.ImageHandler imageHandler = capturandroCallback.createHandler(requestCode);
+        UUID importId = UUID.randomUUID();
 
         if (requestCode == cameraIntentResultCode) {
             if (resultCode == Activity.RESULT_OK) {
                 if (cameraFilename != null) {
                     File file = new File(context.getExternalCacheDir(), cameraFilename);
-                    final Bitmap bitmap = BitmapUtil.getProcessedBitmap(file, longestSide);
-                    file.delete();
-                    imageHandler.onCameraImportSuccess(cameraFilename, bitmap);
+                    Uri imageUri = BitmapUtil.getProcessedImage(file, longestSide);
+                    imageHandler.onCameraImportSuccess(importId, imageUri);
                 } else {
-                    imageHandler.onCameraImportFailure(cameraFilename, new CapturandroException("Could not get image from camera"));
+                    imageHandler.onCameraImportFailure(importId, new CapturandroException("Could not get image from camera"));
                 }
             }
         } else if (requestCode == galleryIntentResultCode) {
             if (resultCode == Activity.RESULT_OK && intent != null) { //sometimes intent is null when gallery app is opened
-                if (!multiGalleryImport(intent, imageHandler)) {
+                if (!multiGalleryImport(importId, intent, imageHandler)) {
                     Uri selectedImage = intent.getData();
-                    galleryHandler.handle(selectedImage, getUniqueFilename(), imageHandler, context, longestSide);
+                    galleryHandler.handle(importId, selectedImage, getUniqueFilename(), imageHandler, context, longestSide);
                 }
             }
         }
     }
 
-    private boolean multiGalleryImport(Intent intent, CapturandroCallback.ImageHandler imageHandler) {
+    private boolean multiGalleryImport(UUID importId, Intent intent, CapturandroCallback.ImageHandler imageHandler) {
         if (Build.VERSION.SDK_INT >= 18) {
             ClipData clipData = intent.getClipData();
             if (clipData != null && clipData.getItemCount() > 0) {
@@ -186,8 +188,6 @@ public class Capturandro {
         }
         return false;
     }
-
-    //  ----------------
 
     private String getUniqueFilename() {
         return "capturandro-" + System.currentTimeMillis() + ".jpg";
