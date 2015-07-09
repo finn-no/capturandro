@@ -170,7 +170,7 @@ public class Capturandro {
             }
         } else if (requestCode == galleryIntentResultCode) {
             if (resultCode == Activity.RESULT_OK && intent != null) { //sometimes intent is null when gallery app is opened
-                if (!multiGalleryImport(importId, intent, imageHandler)) {
+                if (!multiGalleryImport(intent, imageHandler)) {
                     Uri selectedImage = intent.getData();
                     galleryHandler.handle(importId, selectedImage, getUniqueFilename(), imageHandler, context, longestSide);
                 }
@@ -178,11 +178,11 @@ public class Capturandro {
         }
     }
 
-    private boolean multiGalleryImport(UUID importId, Intent intent, CapturandroCallback.ImageHandler imageHandler) {
+    private boolean multiGalleryImport(Intent intent, CapturandroCallback.ImageHandler imageHandler) {
         if (Build.VERSION.SDK_INT >= 18) {
             ClipData clipData = intent.getClipData();
             if (clipData != null && clipData.getItemCount() > 0) {
-                new DownloadMultipleAsyncTask(context.getContentResolver(), imageHandler, longestSide, clipData).execute();
+                new DownloadMultipleAsyncTask(context, imageHandler, longestSide, clipData).execute();
                 return true;
             }
         }

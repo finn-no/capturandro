@@ -46,18 +46,11 @@ class BitmapUtil {
         }
     }
 
-    static Uri getProcessedImage(Bitmap bitmap, int longestSide, int orientation, String filename) {
-
-        Bitmap rotatedBitmap = rotateBitmap(bitmap, orientation);
-        return saveBitmap(rotatedBitmap, new File(filename));
-    }
-
     private static Bitmap rotateBitmap(Bitmap sourceBitmap, int orientation) {
         Matrix transformationMatrix = new Matrix();
         transformationMatrix.postRotate(orientation);
         // Bitmap is immutable, so we need to create a new one based on the transformation
         Bitmap bitmap = Bitmap.createBitmap(sourceBitmap, 0, 0, sourceBitmap.getWidth(), sourceBitmap.getHeight(), transformationMatrix, true);
-        sourceBitmap.recycle();
         return bitmap;
     }
 
