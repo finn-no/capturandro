@@ -37,6 +37,7 @@ public class CapturandroSampleActivity extends Activity implements CapturandroCa
         capturandro = new Capturandro.Builder(this)
                 .withCallback(this)
                 .build();
+        capturandro.clearAllCachedBitmaps();
     }
 
     public void addFromCameraClick(View v) {

@@ -30,16 +30,14 @@ class GalleryHandler {
     private CapturandroCallback.ImageHandler imageHandler;
     private Context context;
     private int longestSide;
-    private String filename;
 
     GalleryHandler() {
     }
 
-    void handle(UUID importId, Uri selectedImage, String filename, CapturandroCallback.ImageHandler imageHandler, Context context, int longestSide) throws CapturandroException {
+    void handle(UUID importId, Uri selectedImage, CapturandroCallback.ImageHandler imageHandler, Context context, int longestSide) throws CapturandroException {
         this.imageHandler = imageHandler;
         this.context = context;
         this.longestSide = longestSide;
-        this.filename = filename;
 
         if (isUserAttemptingToAddVideo(selectedImage)) {
             imageHandler.onGalleryImportFailure(importId, new CapturandroException("Video files are not supported"));
@@ -62,7 +60,7 @@ class GalleryHandler {
 
                 if (isPicasaAndroid3Image(selectedImage) || imageIsRemote(cursor)) {
                     imageHandler.onGalleryImportStarted(importId);
-                    fetchPicasaAndroid3Image(importId, selectedImage, filename, cursor);
+                    fetchPicasaAndroid3Image(importId, selectedImage, cursor);
                 } else if ("content".equals(selectedImage.getScheme())) {
                     imageHandler.onGalleryImportStarted(importId);
                     Uri uri = fetchOldStyleGalleryImageFile(selectedImage, orientation);
@@ -80,7 +78,7 @@ class GalleryHandler {
         InputStream stream;
         try {
             stream = context.getContentResolver().openInputStream(selectedImage);
-            Uri uri = BitmapUtil.getProcessedImage(stream, longestSide, orientation, filename, context.getExternalCacheDir().getAbsolutePath());
+            Uri uri = BitmapUtil.getProcessedImage(stream, longestSide, orientation);
             stream.close();
             return uri;
         } catch (IOException e) {
@@ -120,11 +118,11 @@ class GalleryHandler {
         return false;
     }
 
-    private Bitmap fetchPicasaAndroid3Image(UUID importId, Uri selectedImage, String filename, Cursor cursor) {
+    private Bitmap fetchPicasaAndroid3Image(UUID importId, Uri selectedImage, Cursor cursor) {
         int columnIndex;
         columnIndex = cursor.getColumnIndex(MediaStore.MediaColumns.DISPLAY_NAME);
         if (columnIndex != -1) {
-            new DownloadRemoteImageAsyncTask(importId, context, selectedImage, filename, imageHandler, longestSide).execute();
+            new DownloadRemoteImageAsyncTask(importId, context, selectedImage, imageHandler, longestSide).execute();
         }
         return null;
     }
