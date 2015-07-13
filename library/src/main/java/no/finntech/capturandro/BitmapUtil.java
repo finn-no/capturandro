@@ -15,8 +15,10 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Random;
 
 class BitmapUtil {
+    private static final Random random = new Random();
 
     private BitmapUtil() {
     }
@@ -106,6 +108,11 @@ class BitmapUtil {
         } else {
             return 1;
         }
+    }
+
+
+    public static String getUniqueFilename() {
+        return "capturandro-" + System.currentTimeMillis() + "." + random.nextInt() + ".jpg";
     }
 
     private static int getOrientation(File file) {

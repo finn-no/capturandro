@@ -98,7 +98,7 @@ public class Capturandro {
     */
     public void importImageFromCamera(Activity activity, int resultCode, int longestSide) {
         Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-        this.cameraFilename = getUniqueFilename();
+        this.cameraFilename = BitmapUtil.getUniqueFilename();
         intent.putExtra(MediaStore.EXTRA_OUTPUT, Uri.fromFile(new File(context.getExternalCacheDir(), cameraFilename)));
         this.longestSide = longestSide;
         this.cameraIntentResultCode = resultCode;
@@ -172,7 +172,7 @@ public class Capturandro {
             if (resultCode == Activity.RESULT_OK && intent != null) { //sometimes intent is null when gallery app is opened
                 if (!multiGalleryImport(intent, imageHandler)) {
                     Uri selectedImage = intent.getData();
-                    galleryHandler.handle(importId, selectedImage, getUniqueFilename(), imageHandler, context, longestSide);
+                    galleryHandler.handle(importId, selectedImage, BitmapUtil.getUniqueFilename(), imageHandler, context, longestSide);
                 }
             }
         }
@@ -187,10 +187,6 @@ public class Capturandro {
             }
         }
         return false;
-    }
-
-    private String getUniqueFilename() {
-        return "capturandro-" + System.currentTimeMillis() + ".jpg";
     }
 
     private ArrayList<Uri> getImagesFromIntent(Intent intent) {
