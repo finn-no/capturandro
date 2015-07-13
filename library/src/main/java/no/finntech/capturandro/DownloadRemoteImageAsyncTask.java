@@ -20,15 +20,13 @@ public class DownloadRemoteImageAsyncTask extends AsyncTask<Void, Integer, Void>
     protected Context context;
 
     private Uri uri;
-    private String filename;
     private Uri importedUri;
     private IOException exception;
     private UUID importId;
 
-    public DownloadRemoteImageAsyncTask(UUID importId, Context context, Uri imageToDownloadUri, String filename, CapturandroCallback.ImageHandler imageHandler, int longestSide) {
+    public DownloadRemoteImageAsyncTask(UUID importId, Context context, Uri imageToDownloadUri, CapturandroCallback.ImageHandler imageHandler, int longestSide) {
         this.context = context;
         this.uri = imageToDownloadUri;
-        this.filename = filename;
         this.imageHandler = imageHandler;
         this.longestSide = longestSide;
         this.importId = importId;
@@ -41,7 +39,7 @@ public class DownloadRemoteImageAsyncTask extends AsyncTask<Void, Integer, Void>
 
     @Override
     protected Void doInBackground(Void... voids) {
-        File file = new File(context.getExternalCacheDir(), filename);
+        File file = new File(BitmapUtil.getUniqueFilename());
         OutputStream outputStream = null;
         InputStream inputStream = null;
 

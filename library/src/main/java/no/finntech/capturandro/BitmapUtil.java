@@ -1,5 +1,13 @@
 package no.finntech.capturandro;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.Random;
+
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Matrix;
@@ -8,14 +16,6 @@ import android.net.Uri;
 import android.util.Log;
 
 import org.apache.commons.io.IOUtils;
-
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.Random;
 
 class BitmapUtil {
     private static final Random random = new Random();
@@ -31,18 +31,19 @@ class BitmapUtil {
         Bitmap bitmap;
         bitmap = decodeBitmapFile(inFile, longestSide);
         Bitmap rotatedBitmap = rotateBitmap(bitmap, orientation);
-        return saveBitmap(rotatedBitmap, inFile.getAbsoluteFile());
+        return saveBitmap(rotatedBitmap);
     }
 
-    static Uri getProcessedImage(InputStream inputStream, int longestSide, int orientation, String filename, String externalCacheDir) {
+    static Uri getProcessedImage(InputStream inputStream, int longestSide, int orientation) {
         try {
-            File file = new File(externalCacheDir + filename);
+            File file = new File(getUniqueFilename());
             FileOutputStream fos = new FileOutputStream(file);
             IOUtils.copy(inputStream, fos);
 
             Bitmap bitmap = decodeBitmapFile(file, longestSide);
             Bitmap rotatedBitmap = rotateBitmap(bitmap, orientation);
-            return saveBitmap(rotatedBitmap, new File(externalCacheDir + filename));
+            file.delete();
+            return saveBitmap(rotatedBitmap);
         } catch (IOException e) {
             return Uri.EMPTY;
         }
@@ -52,22 +53,22 @@ class BitmapUtil {
         Matrix transformationMatrix = new Matrix();
         transformationMatrix.postRotate(orientation);
         // Bitmap is immutable, so we need to create a new one based on the transformation
-        Bitmap bitmap = Bitmap.createBitmap(sourceBitmap, 0, 0, sourceBitmap.getWidth(), sourceBitmap.getHeight(), transformationMatrix, true);
-        return bitmap;
+        return Bitmap.createBitmap(sourceBitmap, 0, 0, sourceBitmap.getWidth(), sourceBitmap.getHeight(), transformationMatrix, true);
     }
 
-    public static Uri saveBitmap(Bitmap bitmap, File filenameToSave) throws IllegalArgumentException {
+    public static Uri saveBitmap(Bitmap bitmap) throws IllegalArgumentException {
         FileOutputStream out = null;
+        String filename = getUniqueFilename();
         int compressionPercentage = Capturandro.DEFAULT_STORED_IMAGE_COMPRESSION_PERCENT;
         try {
-            out = new FileOutputStream(filenameToSave);
+            out = new FileOutputStream(filename);
             bitmap.compress(Bitmap.CompressFormat.JPEG, compressionPercentage, out);
         } catch (FileNotFoundException e) {
             throw new IllegalArgumentException(e.getMessage(), e);
         } finally {
             IOUtils.closeQuietly(out);
         }
-        return Uri.fromFile(filenameToSave);
+        return Uri.fromFile(new File(filename));
     }
 
     // Loosely based on code found in
@@ -112,7 +113,7 @@ class BitmapUtil {
 
 
     public static String getUniqueFilename() {
-        return "capturandro-" + System.currentTimeMillis() + "." + random.nextInt() + ".jpg";
+        return new File(Capturandro.applicationContext.getExternalCacheDir().getAbsolutePath(), "capturandro-" + System.currentTimeMillis() + "." + random.nextInt() + ".jpg").toString();
     }
 
     private static int getOrientation(File file) {
