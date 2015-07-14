@@ -2,7 +2,6 @@ package no.finntech.capturandro;
 
 import java.io.File;
 import java.io.FilenameFilter;
-import java.util.ArrayList;
 import java.util.UUID;
 
 import android.app.Activity;
@@ -26,10 +25,11 @@ public class Capturandro {
     private int galleryIntentResultCode;
     private int cameraIntentResultCode;
     private final Context context;
-    static Context applicationContext; //@fixme : final
     private CapturandroCallback capturandroCallback;
     private String cameraFilename;
     private int longestSide;
+
+    static Context applicationContext;
 
     /*
     * Builder class for specifying options to capturandro.
@@ -67,7 +67,8 @@ public class Capturandro {
         }
     }
 
-    public Capturandro(Builder builder) {
+    Capturandro(Builder builder) {
+        super();
         this.context = builder.context;
         applicationContext = context.getApplicationContext();
         this.capturandroCallback = builder.capturandroCallback;
@@ -183,28 +184,30 @@ public class Capturandro {
     }
 
     public void clearAllCachedBitmaps() {
-        final String cachePath = Capturandro.applicationContext.getExternalCacheDir().getAbsolutePath();
-        new AsyncTask<Void, Void, Void>() {
-            @Override
-            protected Void doInBackground(Void... params) {
-                android.os.Process.setThreadPriority(android.os.Process.THREAD_PRIORITY_BACKGROUND);
-                File[] files = new File(cachePath).listFiles(new FilenameFilter() {
-                    @Override
-                    public boolean accept(File dir, String filename) {
-                        return filename.startsWith("capturando-") && filename.endsWith(".jpg");
+        File externalCacheDir = Capturandro.applicationContext.getExternalCacheDir();
+        if (externalCacheDir != null) {
+            final String cachePath = externalCacheDir.getAbsolutePath();
+            new AsyncTask<Void, Void, Void>() {
+                @Override
+                protected Void doInBackground(Void... params) {
+                    android.os.Process.setThreadPriority(android.os.Process.THREAD_PRIORITY_BACKGROUND);
+                    File[] files = new File(cachePath).listFiles(new FilenameFilter() {
+                        @Override
+                        public boolean accept(File dir, String filename) {
+                            return filename.startsWith("capturando-") && filename.endsWith(".jpg");
+                        }
+                    });
+                    for (File file : files) {
+                        try {
+                            file.delete();
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
                     }
-                });
-                for (File file : files) {
-                    try {
-                        file.delete();
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
+                    return null;
                 }
-                return null;
-            }
-        }.execute();
-
+            }.execute();
+        }
     }
 
     private boolean multiGalleryImport(Intent intent, CapturandroCallback.ImageHandler imageHandler) {
@@ -217,21 +220,4 @@ public class Capturandro {
         }
         return false;
     }
-
-    private ArrayList<Uri> getImagesFromIntent(Intent intent) {
-        ArrayList<Uri> imageUris = new ArrayList<>();
-        String action = intent.getAction();
-
-        if (Intent.ACTION_SEND.equals(action)) {
-            if (intent.hasExtra(Intent.EXTRA_STREAM)) {
-                imageUris.add((Uri) intent.getParcelableExtra(Intent.EXTRA_STREAM));
-            }
-        } else if (Intent.ACTION_SEND_MULTIPLE.equals(action)) {
-            if (intent.hasExtra(Intent.EXTRA_STREAM)) {
-                imageUris = intent.getParcelableArrayListExtra(Intent.EXTRA_STREAM);
-            }
-        }
-        return imageUris;
-    }
-
 }
