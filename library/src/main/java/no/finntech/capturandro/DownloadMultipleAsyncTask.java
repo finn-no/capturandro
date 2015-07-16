@@ -49,16 +49,26 @@ class DownloadMultipleAsyncTask extends AsyncTask<Void, String, Void> {
 
         for (int i = 0; i < clipData.getItemCount(); i++) {
             final UUID importId = importIds.get(i);
-            Uri uri = clipData.getItemAt(i).getUri();
-            int orientation = GalleryHandler.getOrientation(context.getContentResolver(), uri);
-            File file = new File(getRealPathFromURI(context, uri));
-            final Uri importedUri = BitmapUtil.getProcessedImage(file, longestSide, orientation);
-            handler.post(new Runnable() {
-                @Override
-                public void run() {
-                    imageHandler.onGalleryImportSuccess(importId, importedUri);
-                }
-            });
+            final Uri uri = clipData.getItemAt(i).getUri();
+
+            try {
+                int orientation = GalleryHandler.getOrientation(context.getContentResolver(), uri);
+                File file = new File(getRealPathFromURI(context, uri));
+                final Uri importedUri = BitmapUtil.getProcessedImage(file, longestSide, orientation);
+                handler.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        imageHandler.onGalleryImportSuccess(importId, importedUri);
+                    }
+                });
+            } catch (final Exception e) {
+                handler.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        imageHandler.onGalleryImportFailure(importId, new IllegalStateException("Failed to import " + uri, e));
+                    }
+                });
+            }
         }
         return null;
     }
