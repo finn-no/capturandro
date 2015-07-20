@@ -88,16 +88,21 @@ class GalleryHandler {
     }
 
     public static int getOrientation(ContentResolver contentResolver, Uri photoUri) {
-        Cursor cursor = contentResolver.query(photoUri,
-                new String[]{MediaStore.Images.ImageColumns.ORIENTATION}, null, null, null);
         try {
-            if (cursor.moveToFirst()) {
-                return cursor.getInt(0);
-            } else {
-                return -1;
+            // @note: Crashes in query on Samsung Note 3: https://rink.hockeyapp.net/manage/apps/34941/app_versions/213/crash_reasons/40013686?type=overview
+            Cursor cursor = contentResolver.query(photoUri,
+                    new String[]{MediaStore.Images.ImageColumns.ORIENTATION}, null, null, null);
+            try {
+                if (cursor.moveToFirst()) {
+                    return cursor.getInt(0);
+                } else {
+                    return -1;
+                }
+            } finally {
+                cursor.close();
             }
-        } finally {
-            cursor.close();
+        } catch (Exception ignored) {
+            return -1;
         }
     }
 
