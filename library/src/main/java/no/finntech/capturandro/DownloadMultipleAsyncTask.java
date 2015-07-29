@@ -53,8 +53,7 @@ class DownloadMultipleAsyncTask extends AsyncTask<Void, String, Void> {
 
             try {
                 int orientation = GalleryHandler.getOrientation(context.getContentResolver(), uri);
-                File file = new File(getRealPathFromURI(context, uri));
-                final Uri importedUri = BitmapUtil.getProcessedImage(file, longestSide, orientation);
+                final Uri importedUri = BitmapUtil.getProcessedImage(context.getContentResolver().openInputStream(uri), longestSide, orientation);
                 handler.post(new Runnable() {
                     @Override
                     public void run() {
@@ -72,20 +71,4 @@ class DownloadMultipleAsyncTask extends AsyncTask<Void, String, Void> {
         }
         return null;
     }
-
-    public String getRealPathFromURI(Context context, Uri contentUri) {
-        Cursor cursor = null;
-        try {
-            String[] proj = { MediaStore.Images.Media.DATA };
-            cursor = context.getContentResolver().query(contentUri,  proj, null, null, null);
-            int column_index = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATA);
-            cursor.moveToFirst();
-            return cursor.getString(column_index);
-        } finally {
-            if (cursor != null) {
-                cursor.close();
-            }
-        }
-    }
-
 }
