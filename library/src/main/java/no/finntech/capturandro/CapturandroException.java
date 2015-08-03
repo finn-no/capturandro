@@ -1,13 +1,13 @@
 package no.finntech.capturandro;
 
-public class CapturandroException extends Exception {
-    private final String message;
+import java.io.IOException;
 
-    public CapturandroException(String message){
-        this.message = message;
+public class CapturandroException extends Exception {
+    public CapturandroException(String message) {
+        super(message);
     }
 
-    public String toString(){
-        return message;
+    public CapturandroException(IOException e) {
+        super(e);
     }
 }

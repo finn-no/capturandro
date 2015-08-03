@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Random;
 
+import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Matrix;
@@ -23,27 +24,23 @@ class BitmapUtil {
     private BitmapUtil() {
     }
 
-    static Uri getProcessedImage(File inFile, int longestSide) {
-        return getProcessedImage(inFile, longestSide, getOrientation(inFile));
-    }
-
-    static Uri getProcessedImage(File inFile, int longestSide, int orientation) {
+    static Uri getProcessedImage(Context context, File inFile, int longestSide, int orientation) {
         Bitmap bitmap;
         bitmap = decodeBitmapFile(inFile, longestSide);
         Bitmap rotatedBitmap = rotateBitmap(bitmap, orientation);
-        return saveBitmap(rotatedBitmap);
+        return saveBitmap(context, rotatedBitmap);
     }
 
-    static Uri getProcessedImage(InputStream inputStream, int longestSide, int orientation) {
+    static Uri getProcessedImage(Context context, InputStream inputStream, int longestSide, int orientation) {
         try {
-            File file = new File(getUniqueFilename());
+            File file = new File(getUniqueFilename(context));
             FileOutputStream fos = new FileOutputStream(file);
             IOUtils.copy(inputStream, fos);
 
             Bitmap bitmap = decodeBitmapFile(file, longestSide);
             Bitmap rotatedBitmap = rotateBitmap(bitmap, orientation);
             file.delete();
-            return saveBitmap(rotatedBitmap);
+            return saveBitmap(context, rotatedBitmap);
         } catch (IOException e) {
             return Uri.EMPTY;
         }
@@ -56,9 +53,9 @@ class BitmapUtil {
         return Bitmap.createBitmap(sourceBitmap, 0, 0, sourceBitmap.getWidth(), sourceBitmap.getHeight(), transformationMatrix, true);
     }
 
-    public static Uri saveBitmap(Bitmap bitmap) throws IllegalArgumentException {
+    public static Uri saveBitmap(Context context, Bitmap bitmap) throws IllegalArgumentException {
         FileOutputStream out = null;
-        String filename = getUniqueFilename();
+        String filename = getUniqueFilename(context);
         int compressionPercentage = Capturandro.DEFAULT_STORED_IMAGE_COMPRESSION_PERCENT;
         try {
             out = new FileOutputStream(filename);
@@ -112,40 +109,7 @@ class BitmapUtil {
     }
 
 
-    public static String getUniqueFilename() {
-        return new File(Capturandro.applicationContext.getExternalCacheDir().getAbsolutePath(), "capturandro-" + System.currentTimeMillis() + "." + random.nextInt() + ".jpg").toString();
+    public static String getUniqueFilename(Context context) {
+        return new File(context.getExternalCacheDir().getAbsolutePath(), "capturandro-" + System.currentTimeMillis() + "." + random.nextInt() + ".jpg").toString();
     }
-
-    private static int getOrientation(File file) {
-        ExifInterface exif = getExifFromFile(file);
-
-        int orientation = exif.getAttributeInt(ExifInterface.TAG_ORIENTATION, 1);
-        switch (orientation) {
-            case 0:
-                break;
-            case 3:
-                orientation = 180;
-                break;
-            case 6:
-                orientation = 90;
-                break;
-            case 8:
-                orientation = 270;
-                break;
-            default:
-                orientation = 0;
-                break;
-        }
-        return orientation;
-    }
-
-    private static ExifInterface getExifFromFile(File file) {
-        try {
-            return new ExifInterface(file.getPath());
-        } catch (IOException e) {
-            Log.i("Capturandro", "Could not read Exif data from file: " + file.getPath());
-        }
-        return null;
-    }
-
 }
