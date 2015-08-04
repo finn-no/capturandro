@@ -31,12 +31,6 @@ public class Capturandro {
     private CapturandoState state = null;
     private static boolean initialStartup = true;
 
-    public interface CapturandoCallback {
-        void onCameraImport(Observable<Uri> observable);
-
-        void onGalleryImport(Observable<Uri> observable);
-    }
-
     public Capturandro(Context context, CapturandoCallback callback) {
         super();
         this.callback = callback;
@@ -75,12 +69,12 @@ public class Capturandro {
 
     }
 
-    public void importImageFromGallery(Activity activity, int resultCode) {
-        importImageFromGallery(activity, resultCode, -1);
+    public void importImageFromGallery(Activity activity, int requestCode) {
+        importImageFromGallery(activity, requestCode, -1);
     }
 
-    public void importImageFromGallery(Activity activity, int resultCode, int longestSide) {
-        importImageFromGallery(activity, resultCode, longestSide, true);
+    public void importImageFromGallery(Activity activity, int requestCode, int longestSide) {
+        importImageFromGallery(activity, requestCode, longestSide, true);
     }
 
     /**
@@ -89,7 +83,7 @@ public class Capturandro {
      * When executing subscribe on the Obserable<Uri> image processing may take place (on a seperate thread).
      * * Image processing is done on a single background thread to prevent oom
      */
-    public void importImageFromGallery(final Activity activity, final int resultCode, final int longestSide, final boolean multiselect) {
+    public void importImageFromGallery(final Activity activity, final int requestCode, final int longestSide, final boolean multiselect) {
         state = new GalleryState(longestSide, multiselect);
         Intent intent;
         try {
@@ -97,7 +91,7 @@ public class Capturandro {
             if (Build.VERSION.SDK_INT >= 18 && multiselect) {
                 intent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true);
             }
-            activity.startActivityForResult(intent, resultCode);
+            activity.startActivityForResult(intent, requestCode);
         } catch (ActivityNotFoundException e) {
             intent = new Intent(Intent.ACTION_GET_CONTENT);
             intent.setType("image/*");
@@ -105,16 +99,16 @@ public class Capturandro {
             if (Build.VERSION.SDK_INT >= 18 && multiselect) {
                 intent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true);
             }
-            activity.startActivityForResult(intent, resultCode);
+            activity.startActivityForResult(intent, requestCode);
         }
     }
 
-    public void onActivityResult(Activity activity, int resultCode, Intent intent) throws CapturandroException {
+    public void onActivityResult(Activity activity, int requestCode, int resultCode, Intent intent) throws CapturandroException {
         if (state != null && resultCode == Activity.RESULT_OK) {
             if (state instanceof CameraState) {
                 CameraState state = (CameraState) this.state;
                 ImportHandler importHandler = new ImportHandler(activity, state.longestSide);
-                callback.onCameraImport(importHandler.camera(state.cameraFilename));
+                callback.onCameraImport(requestCode, importHandler.camera(state.cameraFilename));
             } else if (state instanceof GalleryState) {
                 GalleryState state = (GalleryState) this.state;
                 ImportHandler importHandler = new ImportHandler(activity, state.longestSide);
@@ -124,13 +118,13 @@ public class Capturandro {
                         if (clipData != null && clipData.getItemCount() > 0) {
                             for (int i = 0; i < clipData.getItemCount(); i++) {
                                 Uri uri = clipData.getItemAt(i).getUri();
-                                callback.onGalleryImport(importHandler.gallery(uri));
+                                callback.onGalleryImport(requestCode, importHandler.gallery(uri));
                             }
                             return;
                         }
                     }
                     Uri selectedImage = intent.getData();
-                    callback.onGalleryImport(importHandler.gallery(selectedImage));
+                    callback.onGalleryImport(requestCode, importHandler.gallery(selectedImage));
                 } else {
                     throw new CapturandroException("intent is null on gallery import");
                 }
@@ -167,6 +161,7 @@ public class Capturandro {
     }
 
     private static abstract class CapturandoState implements Parcelable {
+
         @Override
         public int describeContents() {
             return 0;
@@ -174,6 +169,7 @@ public class Capturandro {
     }
 
     private static class CameraState extends CapturandoState {
+
         private final int longestSide;
         private final String cameraFilename;
 
@@ -187,12 +183,12 @@ public class Capturandro {
             cameraFilename = in.readString();
         }
 
-
         @Override
         public void writeToParcel(Parcel dest, int flags) {
             dest.writeInt(longestSide);
             dest.writeString(cameraFilename);
         }
+
 
         public static final Parcelable.Creator<CameraState> CREATOR =
                 new Parcelable.Creator<CameraState>() {
@@ -204,9 +200,11 @@ public class Capturandro {
                         return new CameraState[size];
                     }
                 };
+
     }
 
     private static class GalleryState extends CapturandoState {
+
         private final int longestSide;
         private final boolean multiselect;
 
@@ -236,5 +234,11 @@ public class Capturandro {
                         return new GalleryState[size];
                     }
                 };
+    }
+
+    public interface CapturandoCallback {
+        void onCameraImport(int requestCode, Observable<Uri> observable);
+
+        void onGalleryImport(int requestCode, Observable<Uri> observable);
     }
 }

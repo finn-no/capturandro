@@ -97,7 +97,7 @@ public class CapturandroSampleActivity extends Activity {
 
 
         @Override
-        public void onCameraImport(Observable<Uri> observable) {
+        public void onCameraImport(int requestCode, Observable<Uri> observable) {
             observable.subscribe(new Action1<Uri>() {
                 @Override
                 public void call(Uri uri) {
@@ -117,7 +117,7 @@ public class CapturandroSampleActivity extends Activity {
         }
 
         @Override
-        public void onGalleryImport(Observable<Uri> observable) {
+        public void onGalleryImport(int requestCode, Observable<Uri> observable) {
             if (progressDialog == null) {
                 progressDialog = ProgressDialog.show(CapturandroSampleActivity.this, "Downloading", "Downloading image from Picasa...", true);
             }
