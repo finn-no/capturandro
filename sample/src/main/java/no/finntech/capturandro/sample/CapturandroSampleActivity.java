@@ -20,20 +20,16 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import no.finntech.capturandro.Capturandro;
-import no.finntech.capturandro.CapturandroCallback;
 import no.finntech.capturandro.CapturandroException;
 
 import rx.Observable;
 import rx.functions.Action1;
 
-public class CapturandroSampleActivity extends Activity implements CapturandroCallback {
+public class CapturandroSampleActivity extends Activity {
     private static final int CAMERA_RESULT_CODE = 1;
     private static final int GALLERY_RESULT_CODE = 2;
 
-    private int downloads = 0;
-
     private static Capturandro capturandro = null;
-    private ProgressDialog progressDialog;
 
     private static List<Uri> uris = new ArrayList<>(); // lazy mans onSaveInstanceState... really lazy :p
 
@@ -43,9 +39,7 @@ public class CapturandroSampleActivity extends Activity implements CapturandroCa
         setContentView(R.layout.main);
 
         if (capturandro == null) {
-            capturandro = new Capturandro.Builder(this)
-                    .withCallback(this)
-                    .build();
+            capturandro = new Capturandro(this);
             capturandro.clearAllCachedBitmaps();
         }
         for (Uri uri : uris) {
@@ -54,11 +48,73 @@ public class CapturandroSampleActivity extends Activity implements CapturandroCa
     }
 
     public void addFromCameraClick(View v) {
-        capturandro.importImageFromCamera(this, CAMERA_RESULT_CODE, 1600);
+        capturandro.importImageFromCamera(this, CAMERA_RESULT_CODE, 1600).subscribe(new Action1<Observable<Uri>>() {
+            @Override
+            public void call(Observable<Uri> uriObservable) {
+                uriObservable.subscribe(new Action1<Uri>() {
+                    @Override
+                    public void call(Uri uri) {
+                        uris.add(uri);
+                        Bitmap bitmap = resolveBitmap(uri);
+                        showImage(bitmap);
+                    }
+                });
+            }
+        }, new Action1<Throwable>() {
+            @Override
+            public void call(Throwable throwable) {
+                AlertDialog.Builder builder = new AlertDialog.Builder(CapturandroSampleActivity.this);
+                builder.setTitle(getString(R.string.dialog_title_error_importing_image))
+                        .setMessage(getString(R.string.dialog_message_error_importing_image))
+                        .create();
+            }
+        });
     }
 
     public void addFromGalleryClick(View v) {
-        capturandro.importImageFromGallery(this, GALLERY_RESULT_CODE, 400);
+        capturandro.importImageFromGallery(this, GALLERY_RESULT_CODE, 400).subscribe(new Action1<Observable<Uri>>() {
+            int downloads = 0;
+            private ProgressDialog progressDialog = null;
+
+            @Override
+            public void call(Observable<Uri> uriObservable) {
+                if (progressDialog == null) {
+                    progressDialog = ProgressDialog.show(CapturandroSampleActivity.this, "Downloading", "Downloading image from Picasa...", true);
+                }
+                if (!progressDialog.isShowing()) {
+                    progressDialog.show();
+                }
+
+                downloads++;
+                uriObservable.subscribe(new Action1<Uri>() {
+                    @Override
+                    public void call(Uri uri) {
+                        downloadComplete();
+                        uris.add(uri);
+                        showImage(resolveBitmap(uri));
+                    }
+                }, new Action1<Throwable>() {
+                    @Override
+                    public void call(Throwable throwable) {
+                        downloadComplete();
+                        Toast.makeText(CapturandroSampleActivity.this, "Import of image(s) from gallery failed", Toast.LENGTH_LONG).show();
+                    }
+                });
+            }
+
+            private void downloadComplete() {
+                downloads--;
+                if (progressDialog != null && progressDialog.isShowing() && downloads == 0) {
+                    progressDialog.dismiss();
+                }
+            }
+
+        }, new Action1<Throwable>() {
+            @Override
+            public void call(Throwable throwable) {
+                Toast.makeText(CapturandroSampleActivity.this, "Import of image(s) from gallery failed", Toast.LENGTH_LONG).show();
+            }
+        });
     }
 
     @Override
@@ -90,58 +146,4 @@ public class CapturandroSampleActivity extends Activity implements CapturandroCa
         }
         return bitmap;
     }
-
-    @Override
-    public void cameraImport(final Observable<Uri> observable) {
-        observable.subscribe(new Action1<Uri>() {
-            @Override
-            public void call(Uri uri) {
-                uris.add(uri);
-                Bitmap bitmap = resolveBitmap(uri);
-                showImage(bitmap);
-            }
-        }, new Action1<Throwable>() {
-            @Override
-            public void call(Throwable throwable) {
-                AlertDialog.Builder builder = new AlertDialog.Builder(CapturandroSampleActivity.this);
-                builder.setTitle(getString(R.string.dialog_title_error_importing_image))
-                        .setMessage(getString(R.string.dialog_message_error_importing_image))
-                        .create();
-            }
-        });
-    }
-
-    @Override
-    public void galleryImport(Observable<Uri> observable) {
-        downloads++;
-        if (progressDialog == null) {
-            progressDialog = ProgressDialog.show(CapturandroSampleActivity.this, "Downloading", "Downloading image from Picasa...", true);
-        }
-        if (!progressDialog.isShowing()) {
-            progressDialog.show();
-        }
-
-        observable.subscribe(new Action1<Uri>() {
-            @Override
-            public void call(Uri uri) {
-                downloadComplete();
-                uris.add(uri);
-                showImage(resolveBitmap(uri));
-            }
-        }, new Action1<Throwable>() {
-            @Override
-            public void call(Throwable throwable) {
-                downloadComplete();
-                Toast.makeText(CapturandroSampleActivity.this, "Import of image(s) from gallery failed", Toast.LENGTH_LONG).show();
-            }
-        });
-    }
-
-    private void downloadComplete() {
-        downloads--;
-        if (progressDialog != null && progressDialog.isShowing() && downloads == 0) {
-            progressDialog.dismiss();
-        }
-    }
-
 }
