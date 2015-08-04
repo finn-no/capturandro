@@ -50,13 +50,13 @@ public class Capturandro {
         outState.putParcelable(KEY, state);
     }
 
-    public void importImageFromCamera(final Activity activity, final int resultCode) {
-        importImageFromCamera(activity, resultCode, -1);
+    public void importImageFromCamera(final Activity activity, final int requestCode) {
+        importImageFromCamera(activity, requestCode, -1);
     }
 
     /**
      * onCameraImport will trigger with an observable that will return an Uri onNext once the image is captured.
-     * <p/>
+     * <p>
      * When executing subscribe on the Obserable<Uri> image processing may take place (on a seperate thread).
      * Image processing is done on a single background thread to prevent oom
      */
@@ -79,7 +79,7 @@ public class Capturandro {
 
     /**
      * onGalleryImport will return one or more Obserable<Uri> once the images are selected.
-     * <p/>
+     * <p>
      * When executing subscribe on the Obserable<Uri> image processing may take place (on a seperate thread).
      * * Image processing is done on a single background thread to prevent oom
      */
@@ -108,7 +108,7 @@ public class Capturandro {
             if (state instanceof CameraState) {
                 CameraState state = (CameraState) this.state;
                 ImportHandler importHandler = new ImportHandler(activity, state.longestSide);
-                callback.onCameraImport(requestCode, importHandler.camera(state.cameraFilename));
+                callback.onImport(requestCode, importHandler.camera(state.cameraFilename));
             } else if (state instanceof GalleryState) {
                 GalleryState state = (GalleryState) this.state;
                 ImportHandler importHandler = new ImportHandler(activity, state.longestSide);
@@ -118,13 +118,13 @@ public class Capturandro {
                         if (clipData != null && clipData.getItemCount() > 0) {
                             for (int i = 0; i < clipData.getItemCount(); i++) {
                                 Uri uri = clipData.getItemAt(i).getUri();
-                                callback.onGalleryImport(requestCode, importHandler.gallery(uri));
+                                callback.onImport(requestCode, importHandler.gallery(uri));
                             }
                             return;
                         }
                     }
                     Uri selectedImage = intent.getData();
-                    callback.onGalleryImport(requestCode, importHandler.gallery(selectedImage));
+                    callback.onImport(requestCode, importHandler.gallery(selectedImage));
                 } else {
                     throw new CapturandroException("intent is null on gallery import");
                 }
@@ -237,8 +237,6 @@ public class Capturandro {
     }
 
     public interface CapturandoCallback {
-        void onCameraImport(int requestCode, Observable<Uri> observable);
-
-        void onGalleryImport(int requestCode, Observable<Uri> observable);
+        void onImport(int requestCode, Observable<Uri> observable);
     }
 }

@@ -5,7 +5,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import android.app.Activity;
-import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.content.Intent;
 import android.graphics.Bitmap;
@@ -64,7 +63,7 @@ public class CapturandroSampleActivity extends Activity {
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         try {
-            capturandro.onActivityResult(this, resultCode, data);
+            capturandro.onActivityResult(this, requestCode, resultCode, data);
         } catch (CapturandroException e) {
             Toast.makeText(this, e.toString(), Toast.LENGTH_SHORT).show();
         }
@@ -92,40 +91,19 @@ public class CapturandroSampleActivity extends Activity {
     }
 
     private Capturandro.CapturandoCallback callback = new Capturandro.CapturandoCallback() {
-        int downloads = 0;
+        int processing = 0;
         private ProgressDialog progressDialog = null;
 
-
         @Override
-        public void onCameraImport(int requestCode, Observable<Uri> observable) {
-            observable.subscribe(new Action1<Uri>() {
-                @Override
-                public void call(Uri uri) {
-                    uris.add(uri);
-                    Bitmap bitmap = resolveBitmap(uri);
-                    showImage(bitmap);
-                }
-            }, new Action1<Throwable>() {
-                @Override
-                public void call(Throwable throwable) {
-                    AlertDialog.Builder builder = new AlertDialog.Builder(CapturandroSampleActivity.this);
-                    builder.setTitle(getString(R.string.dialog_title_error_importing_image))
-                            .setMessage(getString(R.string.dialog_message_error_importing_image))
-                            .create();
-                }
-            });
-        }
-
-        @Override
-        public void onGalleryImport(int requestCode, Observable<Uri> observable) {
+        public void onImport(int requestCode, Observable<Uri> observable) {
             if (progressDialog == null) {
-                progressDialog = ProgressDialog.show(CapturandroSampleActivity.this, "Downloading", "Downloading image from Picasa...", true);
+                progressDialog = ProgressDialog.show(CapturandroSampleActivity.this, "Processing", "Processing image...", true);
             }
             if (!progressDialog.isShowing()) {
                 progressDialog.show();
             }
 
-            downloads++;
+            processing++;
             observable.subscribe(new Action1<Uri>() {
                 @Override
                 public void call(Uri uri) {
@@ -143,8 +121,8 @@ public class CapturandroSampleActivity extends Activity {
         }
 
         private void downloadComplete() {
-            downloads--;
-            if (progressDialog != null && progressDialog.isShowing() && downloads == 0) {
+            processing--;
+            if (progressDialog != null && progressDialog.isShowing() && processing == 0) {
                 progressDialog.dismiss();
             }
         }
