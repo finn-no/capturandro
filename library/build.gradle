@@ -5,6 +5,7 @@ apply plugin: 'maven'
 
 dependencies {
     compile('commons-io:commons-io:2.2')
+    compile 'io.reactivex:rxandroid:0.24.0'
 }
 
 android {

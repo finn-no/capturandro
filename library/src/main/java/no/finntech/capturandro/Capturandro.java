@@ -2,7 +2,6 @@ package no.finntech.capturandro;
 
 import java.io.File;
 import java.io.FilenameFilter;
-import java.util.UUID;
 
 import android.app.Activity;
 import android.content.ActivityNotFoundException;
@@ -12,132 +11,93 @@ import android.content.Intent;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Build;
+import android.os.Bundle;
+import android.os.Parcel;
+import android.os.Parcelable;
 import android.provider.MediaStore;
+
+import rx.Observable;
 
 /*
 * This is the main class for the capturandro library.
 */
 public class Capturandro {
 
+    private static final String KEY = "CAPTURANDO_STATE";
     public static final int DEFAULT_STORED_IMAGE_COMPRESSION_PERCENT = 75;
 
-    private final GalleryHandler galleryHandler = new GalleryHandler();
-    private int galleryIntentResultCode;
-    private int cameraIntentResultCode;
-    private final Context context;
-    private CapturandroCallback capturandroCallback;
-    private String cameraFilename;
-    private int longestSide;
+    private final CapturandoCallback callback;
 
-    static Context applicationContext;
+    private CapturandoState state = null;
+    private static boolean initialStartup = true;
 
-    /*
-    * Builder class for specifying options to capturandro.
-    *
-    * @param capturandroCallback    Implementation of CapturandroCallback, whose methods are called
-    *                               when an image is captured or capturing fails.
-    *
-    * @param filenamePrefix         Prefix for temporary files stored in the Activity's external
-    *                               cache dir. This file is usually removed by capturandro after
-    *                               import.
-    *
-    * @param context                Android context
-    */
-    public static class Builder {
-        private CapturandroCallback capturandroCallback;
-        private String filenamePrefix;
-        private Context context;
+    public interface CapturandoCallback {
+        void onCameraImport(Observable<Uri> observable);
 
-        public Builder(Context context) {
-            this.context = context;
-        }
-
-        public Builder withCallback(CapturandroCallback capturandroCallback) {
-            this.capturandroCallback = capturandroCallback;
-            return this;
-        }
-
-        public Builder withFilenamePrefix(String filenamePrefix) {
-            this.filenamePrefix = filenamePrefix + "_";
-            return this;
-        }
-
-        public Capturandro build() {
-            return new Capturandro(this);
-        }
+        void onGalleryImport(Observable<Uri> observable);
     }
 
-    Capturandro(Builder builder) {
+    public Capturandro(Context context, CapturandoCallback callback) {
         super();
-        this.context = builder.context;
-        applicationContext = context.getApplicationContext();
-        this.capturandroCallback = builder.capturandroCallback;
+        this.callback = callback;
+        if (initialStartup) {
+            clearAllCachedBitmaps(context);
+            initialStartup = false;
+        }
     }
 
-    public void setCapturandroCallback(CapturandroCallback capturandroCallback) {
-        this.capturandroCallback = capturandroCallback;
+    public void onCreate(Bundle savedInstanceState) {
+        if (savedInstanceState != null) {
+            state = savedInstanceState.getParcelable(KEY);
+        }
     }
 
+    public void onSaveInstanceState(Bundle outState) {
+        outState.putParcelable(KEY, state);
+    }
 
-    /*
-    * Start the import process for getting an image from the camera.
-    *
-    * @param activity   Android Activity. Needed for sending Intent to get pictures from camera.
-    *
-    * @param resultCode The integer code which will be returned in onActivityResult. Handy
-    *                   for knowing where in your app the particular import request comes from.
-    */
-    public void importImageFromCamera(Activity activity, int resultCode) {
+    public void importImageFromCamera(final Activity activity, final int resultCode) {
         importImageFromCamera(activity, resultCode, -1);
     }
 
-    /*
-    * Start the import process for getting an image from the camera.
-    *
-    * @param activity   Android Activity. Needed for sending Intent to get pictures from camera.
-    *
-    * @param resultCode The integer code which will be returned in onActivityResult. Handy
-    *                   for knowing where in your app the particular import request comes from.
-    *
-    * @param longestSide    The longest side of the imported image in either direction
-    */
-    public void importImageFromCamera(Activity activity, int resultCode, int longestSide) {
+    /**
+     * onCameraImport will trigger with an observable that will return an Uri onNext once the image is captured.
+     * <p/>
+     * When executing subscribe on the Obserable<Uri> image processing may take place (on a seperate thread).
+     * Image processing is done on a single background thread to prevent oom
+     */
+    public void importImageFromCamera(final Activity activity, final int requestCode, final int longestSide) {
+        String filename = BitmapUtil.getUniqueFilename(activity);
+        state = new CameraState(longestSide, filename);
         Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-        this.cameraFilename = BitmapUtil.getUniqueFilename();
-        intent.putExtra(MediaStore.EXTRA_OUTPUT, Uri.fromFile(new File(cameraFilename)));
-        this.longestSide = longestSide;
-        this.cameraIntentResultCode = resultCode;
-        activity.startActivityForResult(intent, resultCode);
+        intent.putExtra(MediaStore.EXTRA_OUTPUT, Uri.fromFile(new File(filename)));
+        activity.startActivityForResult(intent, requestCode);
+
     }
 
-    /*
-    *
-    */
     public void importImageFromGallery(Activity activity, int resultCode) {
         importImageFromGallery(activity, resultCode, -1);
     }
 
-    /*
-    *
-    */
     public void importImageFromGallery(Activity activity, int resultCode, int longestSide) {
         importImageFromGallery(activity, resultCode, longestSide, true);
     }
 
-    public void importImageFromGallery(Activity activity, int resultCode, int longestSide, boolean multiselect) {
-        // it probably would have been better if this tried both these methods and presented them
-        // both in a chooser instead of falling back when the main one isn't found. With this approach,
-        // if you have, say, google's photos (g+) and the cyanogenmod gallery installed, the latter
-        // will never be queried.
-        this.galleryIntentResultCode = resultCode;
-        this.longestSide = longestSide;
+    /**
+     * onGalleryImport will return one or more Obserable<Uri> once the images are selected.
+     * <p/>
+     * When executing subscribe on the Obserable<Uri> image processing may take place (on a seperate thread).
+     * * Image processing is done on a single background thread to prevent oom
+     */
+    public void importImageFromGallery(final Activity activity, final int resultCode, final int longestSide, final boolean multiselect) {
+        state = new GalleryState(longestSide, multiselect);
         Intent intent;
         try {
             intent = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
             if (Build.VERSION.SDK_INT >= 18 && multiselect) {
                 intent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true);
             }
-            activity.startActivityForResult(intent, galleryIntentResultCode);
+            activity.startActivityForResult(intent, resultCode);
         } catch (ActivityNotFoundException e) {
             intent = new Intent(Intent.ACTION_GET_CONTENT);
             intent.setType("image/*");
@@ -145,46 +105,42 @@ public class Capturandro {
             if (Build.VERSION.SDK_INT >= 18 && multiselect) {
                 intent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true);
             }
-            activity.startActivityForResult(intent, galleryIntentResultCode);
+            activity.startActivityForResult(intent, resultCode);
         }
     }
 
-    /*
-    * onActivityResult needs to be called by the same Activity which is passed to either of the
-    * import methods. It calls on the methods in the CapturandroCallback implementation sent to
-    * the Capturandro constructor.
-    *
-    * @throws CapturandroException
-    */
-    public void onActivityResult(int requestCode, int resultCode, Intent intent) throws CapturandroException {
-        if (capturandroCallback == null) {
-            throw new IllegalStateException("Unable to import image. Have you implemented CapturandroCallback?");
-        }
-        CapturandroCallback.ImageHandler imageHandler = capturandroCallback.createHandler(requestCode);
-        UUID importId = UUID.randomUUID();
-
-        if (requestCode == cameraIntentResultCode) {
-            if (resultCode == Activity.RESULT_OK) {
-                if (cameraFilename != null) {
-                    File file = new File(cameraFilename);
-                    Uri imageUri = BitmapUtil.getProcessedImage(file, longestSide);
-                    imageHandler.onCameraImportSuccess(importId, imageUri);
-                } else {
-                    imageHandler.onCameraImportFailure(importId, new CapturandroException("Could not get image from camera"));
-                }
-            }
-        } else if (requestCode == galleryIntentResultCode) {
-            if (resultCode == Activity.RESULT_OK && intent != null) { //sometimes intent is null when gallery app is opened
-                if (!multiGalleryImport(intent, imageHandler)) {
+    public void onActivityResult(Activity activity, int resultCode, Intent intent) throws CapturandroException {
+        if (state != null && resultCode == Activity.RESULT_OK) {
+            if (state instanceof CameraState) {
+                CameraState state = (CameraState) this.state;
+                ImportHandler importHandler = new ImportHandler(activity, state.longestSide);
+                callback.onCameraImport(importHandler.camera(state.cameraFilename));
+            } else if (state instanceof GalleryState) {
+                GalleryState state = (GalleryState) this.state;
+                ImportHandler importHandler = new ImportHandler(activity, state.longestSide);
+                if (intent != null) {
+                    if (Build.VERSION.SDK_INT >= 18) {
+                        ClipData clipData = intent.getClipData();
+                        if (clipData != null && clipData.getItemCount() > 0) {
+                            for (int i = 0; i < clipData.getItemCount(); i++) {
+                                Uri uri = clipData.getItemAt(i).getUri();
+                                callback.onGalleryImport(importHandler.gallery(uri));
+                            }
+                            return;
+                        }
+                    }
                     Uri selectedImage = intent.getData();
-                    galleryHandler.handle(importId, selectedImage, imageHandler, context, longestSide);
+                    callback.onGalleryImport(importHandler.gallery(selectedImage));
+                } else {
+                    throw new CapturandroException("intent is null on gallery import");
                 }
             }
+            state = null;
         }
     }
 
-    public void clearAllCachedBitmaps() {
-        File externalCacheDir = Capturandro.applicationContext.getExternalCacheDir();
+    void clearAllCachedBitmaps(Context context) {
+        File externalCacheDir = context.getExternalCacheDir();
         if (externalCacheDir != null) {
             final String cachePath = externalCacheDir.getAbsolutePath();
             new AsyncTask<Void, Void, Void>() {
@@ -210,14 +166,75 @@ public class Capturandro {
         }
     }
 
-    private boolean multiGalleryImport(Intent intent, CapturandroCallback.ImageHandler imageHandler) {
-        if (Build.VERSION.SDK_INT >= 18) {
-            ClipData clipData = intent.getClipData();
-            if (clipData != null && clipData.getItemCount() > 0) {
-                new DownloadMultipleAsyncTask(context, imageHandler, longestSide, clipData).execute();
-                return true;
-            }
+    private static abstract class CapturandoState implements Parcelable {
+        @Override
+        public int describeContents() {
+            return 0;
         }
-        return false;
+    }
+
+    private static class CameraState extends CapturandoState {
+        private final int longestSide;
+        private final String cameraFilename;
+
+        public CameraState(int longestSide, String cameraFilename) {
+            this.longestSide = longestSide;
+            this.cameraFilename = cameraFilename;
+        }
+
+        public CameraState(Parcel in) {
+            longestSide = in.readInt();
+            cameraFilename = in.readString();
+        }
+
+
+        @Override
+        public void writeToParcel(Parcel dest, int flags) {
+            dest.writeInt(longestSide);
+            dest.writeString(cameraFilename);
+        }
+
+        public static final Parcelable.Creator<CameraState> CREATOR =
+                new Parcelable.Creator<CameraState>() {
+                    public CameraState createFromParcel(Parcel in) {
+                        return new CameraState(in);
+                    }
+
+                    public CameraState[] newArray(int size) {
+                        return new CameraState[size];
+                    }
+                };
+    }
+
+    private static class GalleryState extends CapturandoState {
+        private final int longestSide;
+        private final boolean multiselect;
+
+        public GalleryState(Parcel in) {
+            longestSide = in.readInt();
+            multiselect = in.readInt() == 1;
+        }
+
+        public GalleryState(int longestSide, boolean multiselect) {
+            this.longestSide = longestSide;
+            this.multiselect = multiselect;
+        }
+
+        @Override
+        public void writeToParcel(Parcel dest, int flags) {
+            dest.writeInt(longestSide);
+            dest.writeInt(multiselect ? 1 : 0);
+        }
+
+        public static final Parcelable.Creator<GalleryState> CREATOR =
+                new Parcelable.Creator<GalleryState>() {
+                    public GalleryState createFromParcel(Parcel in) {
+                        return new GalleryState(in);
+                    }
+
+                    public GalleryState[] newArray(int size) {
+                        return new GalleryState[size];
+                    }
+                };
     }
 }
