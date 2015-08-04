@@ -39,8 +39,8 @@ public class CapturandroSampleActivity extends Activity {
         setContentView(R.layout.main);
 
         if (capturandro == null) {
-            capturandro = new Capturandro(this);
-            capturandro.clearAllCachedBitmaps();
+            capturandro = new Capturandro();
+            capturandro.clearAllCachedBitmaps(this);
         }
         for (Uri uri : uris) {
             showImage(resolveBitmap(uri));

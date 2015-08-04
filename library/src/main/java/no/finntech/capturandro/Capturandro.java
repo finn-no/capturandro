@@ -22,7 +22,6 @@ import rx.Subscriber;
 public class Capturandro {
 
     public static final int DEFAULT_STORED_IMAGE_COMPRESSION_PERCENT = 75;
-    private final Context context;
 
     private OnActivityResultCallback currentCallback = null;
 
@@ -30,9 +29,8 @@ public class Capturandro {
         void OnActivityResult(int requestCode, int resultCode, Intent intent);
     }
 
-    public Capturandro(Context context) {
+    public Capturandro() {
         super();
-        this.context = context;
     }
 
     public Observable<Observable<Uri>> importImageFromCamera(final Activity activity, final int resultCode) {
@@ -51,14 +49,14 @@ public class Capturandro {
                 subscriber.onStart();
 
                 Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-                final String cameraFilename = BitmapUtil.getUniqueFilename(context);
+                final String cameraFilename = BitmapUtil.getUniqueFilename(activity);
                 intent.putExtra(MediaStore.EXTRA_OUTPUT, Uri.fromFile(new File(cameraFilename)));
                 currentCallback = new OnActivityResultCallback() {
                     @Override
                     public void OnActivityResult(int requestCode, int resultCode, Intent intent) {
                         if (resultCode == Activity.RESULT_OK) {
                             if (!subscriber.isUnsubscribed()) {
-                                ImportHandler importHandler = new ImportHandler(context, longestSide);
+                                ImportHandler importHandler = new ImportHandler(activity, longestSide);
                                 subscriber.onNext(importHandler.camera(cameraFilename));
                                 subscriber.onCompleted();
                             }
@@ -94,7 +92,7 @@ public class Capturandro {
                     public void OnActivityResult(int requestCode, int resultCode, Intent intent) {
                         if (resultCode == Activity.RESULT_OK) {
                             if (!subscriber.isUnsubscribed()) {
-                                ImportHandler importHandler = new ImportHandler(context, longestSide);
+                                ImportHandler importHandler = new ImportHandler(activity, longestSide);
                                 if (intent != null) {
                                     if (Build.VERSION.SDK_INT >= 18) {
                                         ClipData clipData = intent.getClipData();
@@ -150,7 +148,7 @@ public class Capturandro {
         }
     }
 
-    public void clearAllCachedBitmaps() {
+    public void clearAllCachedBitmaps(Context context) {
         File externalCacheDir = context.getExternalCacheDir();
         if (externalCacheDir != null) {
             final String cachePath = externalCacheDir.getAbsolutePath();
