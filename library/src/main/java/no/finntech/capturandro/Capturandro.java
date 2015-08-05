@@ -2,6 +2,7 @@ package no.finntech.capturandro;
 
 import java.io.File;
 import java.io.FilenameFilter;
+import java.util.concurrent.Executors;
 
 import android.app.Activity;
 import android.content.ActivityNotFoundException;
@@ -17,17 +18,18 @@ import android.os.Parcelable;
 import android.provider.MediaStore;
 
 import rx.Observable;
+import rx.Scheduler;
+import rx.schedulers.Schedulers;
 
 /*
 * This is the main class for the capturandro library.
 */
 public class Capturandro {
-
     private static final String KEY = "CAPTURANDO_STATE";
     public static final int DEFAULT_STORED_IMAGE_COMPRESSION_PERCENT = 75;
 
     private final CapturandoCallback callback;
-
+    private static Scheduler scheduler = Schedulers.from(Executors.newSingleThreadExecutor());
     private CapturandoState state = null;
     private static boolean initialStartup = true;
 
@@ -52,6 +54,15 @@ public class Capturandro {
 
     public void importImageFromCamera(final Activity activity, final int requestCode) {
         importImageFromCamera(activity, requestCode, -1);
+    }
+
+    public static Scheduler getScheduler() {
+        return scheduler;
+    }
+
+
+    public static void setScheduler(Scheduler scheduler) {
+        Capturandro.scheduler = scheduler;
     }
 
     /**
@@ -108,7 +119,7 @@ public class Capturandro {
             if (state instanceof CameraState) {
                 CameraState state = (CameraState) this.state;
                 ImportHandler importHandler = new ImportHandler(activity, state.longestSide);
-                callback.onImport(requestCode, importHandler.camera(state.cameraFilename));
+                callback.onImport(requestCode, importHandler.camera(scheduler, state.cameraFilename));
             } else if (state instanceof GalleryState) {
                 GalleryState state = (GalleryState) this.state;
                 ImportHandler importHandler = new ImportHandler(activity, state.longestSide);
@@ -118,13 +129,13 @@ public class Capturandro {
                         if (clipData != null && clipData.getItemCount() > 0) {
                             for (int i = 0; i < clipData.getItemCount(); i++) {
                                 Uri uri = clipData.getItemAt(i).getUri();
-                                callback.onImport(requestCode, importHandler.gallery(uri));
+                                callback.onImport(requestCode, importHandler.gallery(scheduler, uri));
                             }
                             return;
                         }
                     }
                     Uri selectedImage = intent.getData();
-                    callback.onImport(requestCode, importHandler.gallery(selectedImage));
+                    callback.onImport(requestCode, importHandler.gallery(scheduler, selectedImage));
                 } else {
                     throw new CapturandroException("intent is null on gallery import");
                 }

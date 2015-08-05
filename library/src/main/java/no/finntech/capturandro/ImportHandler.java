@@ -3,7 +3,6 @@ package no.finntech.capturandro;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.concurrent.Executors;
 
 import android.content.ContentResolver;
 import android.content.Context;
@@ -17,11 +16,8 @@ import rx.Observable;
 import rx.Scheduler;
 import rx.Subscriber;
 import rx.android.schedulers.AndroidSchedulers;
-import rx.schedulers.Schedulers;
 
 class ImportHandler {
-    private static final Scheduler scheduler = Schedulers.from(Executors.newSingleThreadExecutor());
-
     private Context context;
     private int longestSide;
 
@@ -31,7 +27,7 @@ class ImportHandler {
     }
 
 
-    Observable<Uri> camera(final String cameraFilename) {
+    Observable<Uri> camera(Scheduler scheduler, final String cameraFilename) {
         return Observable.create(new Observable.OnSubscribe<Uri>() {
                                      @Override
                                      public void call(Subscriber<? super Uri> subscriber) {
@@ -48,7 +44,7 @@ class ImportHandler {
         ).onBackpressureBuffer().subscribeOn(scheduler).observeOn(AndroidSchedulers.mainThread());
     }
 
-    Observable<Uri> gallery(final Uri selectedImage) {
+    Observable<Uri> gallery(Scheduler scheduler, final Uri selectedImage) {
         return Observable.create(new Observable.OnSubscribe<Uri>() {
                                      @Override
                                      public void call(Subscriber<? super Uri> subscriber) {
