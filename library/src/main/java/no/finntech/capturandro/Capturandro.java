@@ -158,11 +158,14 @@ public class Capturandro {
                             return filename.startsWith("capturando-") && filename.endsWith(".jpg");
                         }
                     });
-                    for (File file : files) {
-                        try {
-                            file.delete();
-                        } catch (Exception e) {
-                            e.printStackTrace();
+                    // If READ_EXTERNAL_STORAGE permission isn't granted, files might be null
+                    if (files != null) {
+                        for (File file : files) {
+                            try {
+                                file.delete();
+                            } catch (Exception e) {
+                                e.printStackTrace();
+                            }
                         }
                     }
                     return null;
