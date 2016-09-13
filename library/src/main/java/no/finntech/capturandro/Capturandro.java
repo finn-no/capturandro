@@ -16,7 +16,9 @@ import android.os.Bundle;
 import android.os.Parcel;
 import android.os.Parcelable;
 import android.provider.MediaStore;
+import android.support.v4.content.FileProvider;
 
+import no.finn.capturandro.BuildConfig;
 import rx.Observable;
 import rx.Scheduler;
 import rx.schedulers.Schedulers;
@@ -74,8 +76,19 @@ public class Capturandro {
     public void importImageFromCamera(final Activity activity, final int requestCode, final int longestSide) {
         String filename = BitmapUtil.getUniqueFilename(activity);
         state = new CameraState(longestSide, filename);
+
+        Uri uri;
+        File file = new File(filename);
+        if (Build.VERSION.SDK_INT >= 24) {
+            uri = FileProvider.getUriForFile(activity,
+                    BuildConfig.APPLICATION_ID + ".provider",
+                    file);
+        } else {
+            uri = Uri.fromFile(file);
+        }
+
         Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-        intent.putExtra(MediaStore.EXTRA_OUTPUT, Uri.fromFile(new File(filename)));
+        intent.putExtra(MediaStore.EXTRA_OUTPUT, uri);
         activity.startActivityForResult(intent, requestCode);
 
     }

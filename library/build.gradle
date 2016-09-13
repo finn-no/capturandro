@@ -5,16 +5,17 @@ apply plugin: 'maven'
 
 dependencies {
     compile('commons-io:commons-io:2.2')
-    compile 'io.reactivex:rxandroid:0.24.0'
+    compile('io.reactivex:rxandroid:1.2.1')
+    compile('com.android.support:support-v13:24.0.0')
 }
 
 android {
-    compileSdkVersion 22
-    buildToolsVersion "21.1.2"
+    compileSdkVersion 24
+    buildToolsVersion "24.0.2"
 
     defaultConfig {
         minSdkVersion 14
-        targetSdkVersion 22
+        targetSdkVersion 24
     }
 
     packagingOptions {

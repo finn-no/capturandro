@@ -1,5 +1,15 @@
 package no.finntech.capturandro;
 
+import android.content.Context;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.Matrix;
+import android.net.Uri;
+import android.os.Build;
+import android.support.v4.content.FileProvider;
+
+import org.apache.commons.io.IOUtils;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -8,15 +18,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Random;
 
-import android.content.Context;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.graphics.Matrix;
-import android.media.ExifInterface;
-import android.net.Uri;
-import android.util.Log;
-
-import org.apache.commons.io.IOUtils;
+import no.finn.capturandro.BuildConfig;
 
 class BitmapUtil {
     private static final Random random = new Random();
@@ -65,7 +67,14 @@ class BitmapUtil {
         } finally {
             IOUtils.closeQuietly(out);
         }
-        return Uri.fromFile(new File(filename));
+        File file = new File(filename);
+        if (Build.VERSION.SDK_INT >= 24) {
+            return FileProvider.getUriForFile(context,
+                    BuildConfig.APPLICATION_ID + ".provider",
+                    file);
+        } else {
+            return Uri.fromFile(file);
+        }
     }
 
     // Loosely based on code found in
