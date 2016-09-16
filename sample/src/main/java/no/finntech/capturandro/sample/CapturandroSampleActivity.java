@@ -38,7 +38,7 @@ public class CapturandroSampleActivity extends Activity {
         setContentView(R.layout.main);
 
         if (capturandro == null) {
-            capturandro = new Capturandro(this, callback);
+            capturandro = new Capturandro(this, callback, "no.finn.capturandro.provider");
         }
         capturandro.onCreate(savedInstanceState);
         for (Uri uri : uris) {

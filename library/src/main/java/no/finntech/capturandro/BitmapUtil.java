@@ -70,7 +70,7 @@ class BitmapUtil {
         File file = new File(filename);
         if (Build.VERSION.SDK_INT >= 24) {
             return FileProvider.getUriForFile(context,
-                    BuildConfig.APPLICATION_ID + ".provider",
+                    Capturandro.getFileProviderAuthority(),
                     file);
         } else {
             return Uri.fromFile(file);

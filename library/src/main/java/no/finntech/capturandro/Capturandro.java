@@ -34,10 +34,12 @@ public class Capturandro {
     private static Scheduler scheduler = Schedulers.from(Executors.newSingleThreadExecutor());
     private CapturandoState state = null;
     private static boolean initialStartup = true;
+    private static String fileProviderAuthority;
 
-    public Capturandro(Context context, CapturandoCallback callback) {
+    public Capturandro(Context context, CapturandoCallback callback, String fileProviderAuthority) {
         super();
         this.callback = callback;
+        Capturandro.fileProviderAuthority = fileProviderAuthority;
         if (initialStartup) {
             clearAllCachedBitmaps(context);
             initialStartup = false;
@@ -67,6 +69,10 @@ public class Capturandro {
         Capturandro.scheduler = scheduler;
     }
 
+    public static String getFileProviderAuthority() {
+        return fileProviderAuthority;
+    }
+
     /**
      * onCameraImport will trigger with an observable that will return an Uri onNext once the image is captured.
      * <p>
@@ -81,7 +87,7 @@ public class Capturandro {
         File file = new File(filename);
         if (Build.VERSION.SDK_INT >= 24) {
             uri = FileProvider.getUriForFile(activity,
-                    BuildConfig.APPLICATION_ID + ".provider",
+                    getFileProviderAuthority(),
                     file);
         } else {
             uri = Uri.fromFile(file);
