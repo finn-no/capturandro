@@ -1,9 +1,5 @@
 package no.finntech.capturandro;
 
-import java.io.File;
-import java.io.FilenameFilter;
-import java.util.concurrent.Executors;
-
 import android.app.Activity;
 import android.content.ActivityNotFoundException;
 import android.content.ClipData;
@@ -15,10 +11,14 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Parcel;
 import android.os.Parcelable;
+import android.os.Process;
 import android.provider.MediaStore;
 import android.support.v4.content.FileProvider;
 
-import no.finn.capturandro.BuildConfig;
+import java.io.File;
+import java.io.FilenameFilter;
+import java.util.concurrent.Executors;
+
 import rx.Observable;
 import rx.Scheduler;
 import rx.schedulers.Schedulers;
@@ -35,6 +35,7 @@ public class Capturandro {
     private CapturandoState state = null;
     private static boolean initialStartup = true;
     private static String fileProviderAuthority;
+    private AsyncTask<Void, Void, Void> deleteTask;
 
     public Capturandro(Context context, CapturandoCallback callback, String fileProviderAuthority) {
         super();
@@ -49,6 +50,12 @@ public class Capturandro {
     public void onCreate(Bundle savedInstanceState) {
         if (savedInstanceState != null) {
             state = savedInstanceState.getParcelable(KEY);
+        }
+    }
+
+    public void onDestroy() {
+        if (deleteTask != null) {
+            deleteTask.cancel(true);
         }
     }
 
@@ -163,14 +170,14 @@ public class Capturandro {
         }
     }
 
-    void clearAllCachedBitmaps(Context context) {
+    private void clearAllCachedBitmaps(Context context) {
         File externalCacheDir = context.getExternalCacheDir();
         if (externalCacheDir != null) {
             final String cachePath = externalCacheDir.getAbsolutePath();
-            new AsyncTask<Void, Void, Void>() {
+            deleteTask = new AsyncTask<Void, Void, Void>() {
                 @Override
                 protected Void doInBackground(Void... params) {
-                    android.os.Process.setThreadPriority(android.os.Process.THREAD_PRIORITY_BACKGROUND);
+                    Process.setThreadPriority(Process.THREAD_PRIORITY_BACKGROUND);
                     File[] files = new File(cachePath).listFiles(new FilenameFilter() {
                         @Override
                         public boolean accept(File dir, String filename) {
@@ -180,6 +187,9 @@ public class Capturandro {
                     // If READ_EXTERNAL_STORAGE permission isn't granted, files might be null
                     if (files != null) {
                         for (File file : files) {
+                            if (isCancelled()) {
+                                return null;
+                            }
                             try {
                                 file.delete();
                             } catch (Exception e) {

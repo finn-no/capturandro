@@ -8,17 +8,15 @@ import android.net.Uri;
 import android.os.Build;
 import android.support.v4.content.FileProvider;
 
-import org.apache.commons.io.IOUtils;
-
+import java.io.Closeable;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.Random;
-
-import no.finn.capturandro.BuildConfig;
 
 class BitmapUtil {
     private static final Random random = new Random();
@@ -37,7 +35,7 @@ class BitmapUtil {
         try {
             File file = new File(getUniqueFilename(context));
             FileOutputStream fos = new FileOutputStream(file);
-            IOUtils.copy(inputStream, fos);
+            copy(inputStream, fos);
 
             Bitmap bitmap = decodeBitmapFile(file, longestSide);
             Bitmap rotatedBitmap = rotateBitmap(bitmap, orientation);
@@ -48,11 +46,8 @@ class BitmapUtil {
         }
     }
 
-    private static Bitmap rotateBitmap(Bitmap sourceBitmap, int orientation) {
-        Matrix transformationMatrix = new Matrix();
-        transformationMatrix.postRotate(orientation);
-        // Bitmap is immutable, so we need to create a new one based on the transformation
-        return Bitmap.createBitmap(sourceBitmap, 0, 0, sourceBitmap.getWidth(), sourceBitmap.getHeight(), transformationMatrix, true);
+    static String getUniqueFilename(Context context) {
+        return new File(context.getExternalCacheDir().getAbsolutePath(), "capturandro-" + System.currentTimeMillis() + "." + random.nextInt() + ".jpg").toString();
     }
 
     public static Uri saveBitmap(Context context, Bitmap bitmap) throws IllegalArgumentException {
@@ -65,7 +60,7 @@ class BitmapUtil {
         } catch (FileNotFoundException e) {
             throw new IllegalArgumentException(e.getMessage(), e);
         } finally {
-            IOUtils.closeQuietly(out);
+            closeQuietly(out);
         }
         File file = new File(filename);
         if (Build.VERSION.SDK_INT >= 24) {
@@ -75,6 +70,34 @@ class BitmapUtil {
         } else {
             return Uri.fromFile(file);
         }
+    }
+
+    private static long copy(InputStream input, OutputStream output) throws IOException {
+        byte[] buffer = new byte[4096];
+        long count = 0;
+        int n;
+        while (-1 != (n = input.read(buffer))) {
+            output.write(buffer, 0, n);
+            count += n;
+        }
+        return count;
+    }
+
+    private static void closeQuietly(Closeable closeable) {
+        try {
+            if (closeable != null) {
+                closeable.close();
+            }
+        } catch (IOException ioe) {
+            // ignore
+        }
+    }
+
+    private static Bitmap rotateBitmap(Bitmap sourceBitmap, int orientation) {
+        Matrix transformationMatrix = new Matrix();
+        transformationMatrix.postRotate(orientation);
+        // Bitmap is immutable, so we need to create a new one based on the transformation
+        return Bitmap.createBitmap(sourceBitmap, 0, 0, sourceBitmap.getWidth(), sourceBitmap.getHeight(), transformationMatrix, true);
     }
 
     // Loosely based on code found in
@@ -99,10 +122,11 @@ class BitmapUtil {
         } catch (FileNotFoundException e) {
             throw new IllegalArgumentException(e.getMessage(), e);
         } finally {
-            IOUtils.closeQuietly(inJustDecodeBoundsImageStream);
-            IOUtils.closeQuietly(inSampleSizeImageStream);
+            closeQuietly(inJustDecodeBoundsImageStream);
+            closeQuietly(inSampleSizeImageStream);
         }
     }
+
 
     private static int calculateInSampleSize(BitmapFactory.Options options, int longestSide) {
         // Raw height and width of image
@@ -115,10 +139,5 @@ class BitmapUtil {
         } else {
             return 1;
         }
-    }
-
-
-    public static String getUniqueFilename(Context context) {
-        return new File(context.getExternalCacheDir().getAbsolutePath(), "capturandro-" + System.currentTimeMillis() + "." + random.nextInt() + ".jpg").toString();
     }
 }

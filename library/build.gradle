@@ -4,7 +4,6 @@ apply plugin: 'com.android.library'
 apply plugin: 'maven'
 
 dependencies {
-    compile('commons-io:commons-io:2.2')
     compile('io.reactivex:rxandroid:1.2.1')
     compile('com.android.support:support-v13:25.0.0')
 }
