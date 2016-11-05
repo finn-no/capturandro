@@ -15,4 +15,6 @@ android:
     - extra-android-m2repository
 
 sudo: false
+jdk:
+- oraclejdk8
 
