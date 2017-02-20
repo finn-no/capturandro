@@ -1,15 +1,26 @@
 language: android
 android:
   components:
-    - tools
-    - platform-tools
-    - build-tools-25
-    - android-25
-    - extra-android-m2repository
+  - tools
+  - platform-tools
+  - build-tools-25
+  - android-25
+  - extra-android-m2repository
 jdk:
 - oraclejdk8
 before_install:
 - mkdir -p "$ANDROID_HOME/licenses" || true
 - echo -e "\n8933bad161af4178b1185d1a37fbf41ea5269c55" > "$ANDROID_HOME/licenses/android-sdk-license"
 - echo -e "\n84831b9409646a918e30573bab4c9c91346d8abd" > "$ANDROID_HOME/licenses/android-sdk-preview-license"
-
+script:
+- "./gradlew build"
+deploy:
+  provider: script
+  script: "./gradlew publish bintrayUpload"
+  on:
+    tags: true
+    branch: master
+env:
+  global:
+  - secure: DKeW0SdTaS/USPLmfqzHyVMCzGEEse1/0XsAtsBGoo82OfZAvCJNzOvhIwT2sFvUfwf/I1HAWK/ysNFBZMf9sx5muTmT+ion1F6vBX5wAKuYTixjkN2pO3wjRvc8azSXf5JwzQfkgXiQutr35LL8Tf6EJZWFOROkKrXbSPOP8WQ=
+  - secure: FwjTvDTElnOE20LRHYUp1E5kF84tjy2M3AFpDqEX737soN0Q2+hjkFOOx0g+05v3AvGLEQiCdkmz0Lk1V57/gO3tJmgLqP32wP8Sz3xg8GOeoLDjnVtWq4HqBRKmbRbz+Ybm5kbuxdxGe8DmKu3qPRTt0ev38aAjdPwvuk7qczo=

@@ -1,3 +1,7 @@
+buildscript {
+    ext.androidGradleVersion = "2.3.0-beta4"
+}
+
 allprojects {
     group = 'no.finntech'
     version = '0.0.26-SNAPSHOT'
@@ -6,21 +10,19 @@ allprojects {
 subprojects {
     buildscript {
         repositories {
-            mavenLocal()
-            mavenCentral()
             jcenter()
+            mavenLocal()
         }
         dependencies {
-            classpath 'com.android.tools.build:gradle:2.2.2'
+            classpath "com.android.tools.build:gradle:${androidGradleVersion}"
         }
     }
 
     repositories {
-        mavenLocal()
-        mavenCentral()
         jcenter()
+        mavenLocal()
 
-        maven { url "http://repo.maven.apache.org/maven2" }
+//        maven { url "http://repo.maven.apache.org/maven2" }
     }
 
 }

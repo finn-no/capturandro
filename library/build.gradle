@@ -1,16 +1,17 @@
 description = 'Capturandro'
 
 apply plugin: 'com.android.library'
-apply plugin: 'maven'
+apply plugin: 'maven-publish'
+apply plugin: 'com.jfrog.bintray'
 
 dependencies {
     compile('io.reactivex:rxandroid:1.2.1')
-    compile('com.android.support:support-v13:25.0.0')
+    compile('com.android.support:support-v13:25.0.1')
 }
 
 android {
     compileSdkVersion 25
-    buildToolsVersion "25"
+    buildToolsVersion "25.0.2"
 
     defaultConfig {
         minSdkVersion 14
@@ -22,18 +23,45 @@ android {
     }
 }
 
-uploadArchives {
-    repositories {
-        mavenDeployer {
-            if (project.version.endsWith('-SNAPSHOT')) {
-                repository(url: "http://mavenproxy.finntech.no/finntech-internal-snapshot")
-            } else {
-                repository(url: "http://mavenproxy.finntech.no/finntech-internal-release")
-            }
-            pom.groupId = project.group
-            pom.artifactId = 'capturandro'
-            pom.version = project.version
+task sourceJar(type: Jar) {
+    from android.sourceSets.main.java.srcDirs
+    classifier "source"
+}
 
+publishing {
+    publications {
+        Publication(MavenPublication) {
+            groupId project.group
+            artifactId 'capturandro'
+            version project.version
+            artifact(sourceJar)
+            artifact("$buildDir/outputs/aar/capturandro-release.aar")
+        }
+    }
+}
+
+bintray {
+    user = System.getenv('BINTRAY_USER')
+    key = System.getenv('BINTRAY_KEY')
+
+    publications = ['Publication']
+    dryRun = false
+    publish = true
+    pkg {
+        repo = 'maven'
+        name = 'capturandro'
+        desc = 'Capturandro is an easy-to-use image import library for Android.'
+        websiteUrl = 'https://github.com/finn-no/capturandro'
+        issueTrackerUrl = 'https://github.com/finn-no/capturandro/issues'
+        vcsUrl = 'https://github.com/finn-no/capturandro.git'
+        licenses = ['Apache-2.0']
+        labels = ['image','capture', 'photo', 'android','library','camera', 'rx']
+        publicDownloadNumbers = true
+        version {
+            name = project.version
+            mavenCentralSync {
+                sync = false
+            }
         }
     }
 }

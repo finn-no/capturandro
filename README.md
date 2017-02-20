@@ -1,3 +1,4 @@
+[![Build Status](https://travis-ci.org/finn-no/capturandro.svg?branch=master)](https://travis-ci.org/finn-no/capturandro)
 # Capturandro
 
 ## About
