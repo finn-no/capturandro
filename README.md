@@ -82,7 +82,8 @@ repositories {
 
 dependencies {
     compile('no.finntech:capturandro:0.0.26@aar')
-}```
+}
+```
 
 ## License
 
