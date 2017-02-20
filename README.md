@@ -1,4 +1,5 @@
 [![Build Status](https://travis-ci.org/finn-no/capturandro.svg?branch=master)](https://travis-ci.org/finn-no/capturandro)
+[![Download](https://api.bintray.com/packages/finnandroid/maven/capturandro/images/download.svg)](https://bintray.com/finnandroid/maven/capturandro/_latestVersion)
 # Capturandro
 
 ## About
