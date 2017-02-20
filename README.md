@@ -75,14 +75,14 @@ prefer the more restrictive `files-external-path` to `external-path` you will ne
 ```
 
 ### Gradle
-For testing locally while developing use:
 ```groovy
-compile('no.finntech:capturandro:0.0.26@aar') {
-    transitive = true
-    changing = true
+repositories {
+    jcenter()
 }
-```
 
+dependencies {
+    compile('no.finntech:capturandro:0.0.26@aar')
+}```
 
 ## License
 
