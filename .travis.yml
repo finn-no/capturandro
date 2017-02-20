@@ -22,5 +22,6 @@ deploy:
     branch: master
 env:
   global:
+  - DX_HEAP_SIZE=1536
   - secure: DKeW0SdTaS/USPLmfqzHyVMCzGEEse1/0XsAtsBGoo82OfZAvCJNzOvhIwT2sFvUfwf/I1HAWK/ysNFBZMf9sx5muTmT+ion1F6vBX5wAKuYTixjkN2pO3wjRvc8azSXf5JwzQfkgXiQutr35LL8Tf6EJZWFOROkKrXbSPOP8WQ=
   - secure: FwjTvDTElnOE20LRHYUp1E5kF84tjy2M3AFpDqEX737soN0Q2+hjkFOOx0g+05v3AvGLEQiCdkmz0Lk1V57/gO3tJmgLqP32wP8Sz3xg8GOeoLDjnVtWq4HqBRKmbRbz+Ybm5kbuxdxGe8DmKu3qPRTt0ev38aAjdPwvuk7qczo=
