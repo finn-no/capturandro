@@ -56,7 +56,7 @@ class BitmapUtil {
     }
 
     @RequiresPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE)
-    public static Uri saveBitmap(Context context, Bitmap bitmap) throws IllegalArgumentException {
+    private static Uri saveBitmap(Context context, Bitmap bitmap) throws IllegalArgumentException {
         FileOutputStream out = null;
         String filename = getUniqueFilename(context);
         int compressionPercentage = Capturandro.DEFAULT_STORED_IMAGE_COMPRESSION_PERCENT;

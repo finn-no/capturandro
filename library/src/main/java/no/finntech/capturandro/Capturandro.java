@@ -39,7 +39,6 @@ public class Capturandro {
     private static String fileProviderAuthority;
     private AsyncTask<Void, Void, Void> deleteTask;
 
-    @RequiresPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE)
     public Capturandro(Context context, CapturandoCallback callback, String fileProviderAuthority) {
         super();
         this.callback = callback;
@@ -148,7 +147,7 @@ public class Capturandro {
         }
     }
 
-    @RequiresPermission(allOf = { Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.CAMERA })
+    @SuppressWarnings("MissingPermission")
     public void onActivityResult(Activity activity, int requestCode, int resultCode, Intent intent) throws CapturandroException {
         if (state != null && resultCode == Activity.RESULT_OK) {
             if (state instanceof CameraState) {

@@ -34,7 +34,6 @@ class ImportHandler {
         this.longestSide = longestSide;
     }
 
-    @RequiresPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE)
     Observable<Uri> camera(Scheduler scheduler, final String cameraFilename) {
         return Observable.create(new Observable.OnSubscribe<Uri>() {
                                      @Override
@@ -53,11 +52,9 @@ class ImportHandler {
         ).onBackpressureBuffer().subscribeOn(scheduler).observeOn(AndroidSchedulers.mainThread());
     }
 
-    @RequiresPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE)
     Observable<Uri> gallery(Scheduler scheduler, final Uri selectedImage) {
         return Observable.create(new Observable.OnSubscribe<Uri>() {
                                      @Override
-                                     @RequiresPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE)
                                      public void call(Subscriber<? super Uri> subscriber) {
                                          subscriber.onStart();
                                          if (selectedImage == null) {

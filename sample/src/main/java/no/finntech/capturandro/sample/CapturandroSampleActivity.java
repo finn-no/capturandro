@@ -1,16 +1,16 @@
 package no.finntech.capturandro.sample;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-
+import android.Manifest;
 import android.app.Activity;
 import android.app.ProgressDialog;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
+import android.support.annotation.NonNull;
+import android.support.v4.app.ActivityCompat;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
@@ -18,15 +18,20 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+
 import no.finntech.capturandro.Capturandro;
 import no.finntech.capturandro.CapturandroException;
-
 import rx.Observable;
 import rx.functions.Action1;
 
 public class CapturandroSampleActivity extends Activity {
     private static final int CAMERA_RESULT_CODE = 1;
     private static final int GALLERY_RESULT_CODE = 2;
+    private static final int CAMERA_PERMISSION_CODE = 3;
+    private static final int GALLERY_PERMISSION_CODE = 4;
 
     private Capturandro capturandro = null;
 
@@ -52,14 +57,6 @@ public class CapturandroSampleActivity extends Activity {
         capturandro.onSaveInstanceState(outState);
     }
 
-    public void addFromCameraClick(View v) {
-        capturandro.importImageFromCamera(this, CAMERA_RESULT_CODE, 1600);
-    }
-
-    public void addFromGalleryClick(View v) {
-        capturandro.importImageFromGallery(this, GALLERY_RESULT_CODE, 400);
-    }
-
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         try {
@@ -69,11 +66,43 @@ public class CapturandroSampleActivity extends Activity {
         }
     }
 
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        if (requestCode == CAMERA_PERMISSION_CODE) {
+            if (ActivityCompat.checkSelfPermission(this, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED ||
+                ActivityCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+                capturandro.importImageFromCamera(this, CAMERA_RESULT_CODE, 1600);
+            }
+        } else if (requestCode == GALLERY_PERMISSION_CODE) {
+            if (ActivityCompat.checkSelfPermission(this, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED ||
+                ActivityCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+                capturandro.importImageFromGallery(this, GALLERY_RESULT_CODE, 400);
+            }
+        }
+    }
+
+    public void addFromCameraClick(View v) {
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED ||
+            ActivityCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this, new String[] { Manifest.permission.CAMERA, Manifest.permission.WRITE_EXTERNAL_STORAGE }, CAMERA_PERMISSION_CODE);
+        } else {
+            capturandro.importImageFromCamera(this, CAMERA_RESULT_CODE, 1600);
+        }
+    }
+
+    public void addFromGalleryClick(View v) {
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this, new String[] { Manifest.permission.WRITE_EXTERNAL_STORAGE }, GALLERY_PERMISSION_CODE);
+        } else {
+            capturandro.importImageFromGallery(this, GALLERY_RESULT_CODE, 400);
+        }
+    }
+
     private void showImage(Bitmap bitmap) {
         ImageView imageView = new ImageView(this);
         imageView.setImageBitmap(bitmap);
         imageView.setLayoutParams(new ViewGroup.LayoutParams(
-                ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+            ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT));
         ((LinearLayout) findViewById(R.id.image_list)).addView(imageView);
         TextView textView = new TextView(this);
         textView.setText("width: " + bitmap.getWidth() + ", height: " + bitmap.getHeight());
