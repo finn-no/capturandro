@@ -105,7 +105,7 @@ public class CapturandroSampleActivity extends Activity {
             ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT));
         ((LinearLayout) findViewById(R.id.image_list)).addView(imageView);
         TextView textView = new TextView(this);
-        textView.setText("width: " + bitmap.getWidth() + ", height: " + bitmap.getHeight());
+        textView.setText(getString(R.string.dimensions, bitmap.getWidth(), bitmap.getHeight()));
         ((LinearLayout) findViewById(R.id.image_list)).addView(textView);
     }
 
