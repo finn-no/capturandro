@@ -1,17 +1,19 @@
 package no.finntech.capturandro;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.URL;
-
+import android.Manifest;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.database.Cursor;
 import android.media.ExifInterface;
 import android.net.Uri;
 import android.provider.MediaStore;
+import android.support.annotation.RequiresPermission;
 import android.util.Log;
+
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URL;
 
 import rx.Observable;
 import rx.Scheduler;
@@ -32,9 +34,11 @@ class ImportHandler {
         this.longestSide = longestSide;
     }
 
+    @RequiresPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE)
     Observable<Uri> camera(Scheduler scheduler, final String cameraFilename) {
         return Observable.create(new Observable.OnSubscribe<Uri>() {
                                      @Override
+                                     @RequiresPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE)
                                      public void call(Subscriber<? super Uri> subscriber) {
                                          subscriber.onStart();
                                          if (cameraFilename != null) {
@@ -49,9 +53,11 @@ class ImportHandler {
         ).onBackpressureBuffer().subscribeOn(scheduler).observeOn(AndroidSchedulers.mainThread());
     }
 
+    @RequiresPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE)
     Observable<Uri> gallery(Scheduler scheduler, final Uri selectedImage) {
         return Observable.create(new Observable.OnSubscribe<Uri>() {
                                      @Override
+                                     @RequiresPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE)
                                      public void call(Subscriber<? super Uri> subscriber) {
                                          subscriber.onStart();
                                          if (selectedImage == null) {

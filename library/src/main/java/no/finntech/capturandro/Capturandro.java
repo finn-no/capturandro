@@ -1,5 +1,6 @@
 package no.finntech.capturandro;
 
+import android.Manifest;
 import android.app.Activity;
 import android.content.ActivityNotFoundException;
 import android.content.ClipData;
@@ -13,6 +14,7 @@ import android.os.Parcel;
 import android.os.Parcelable;
 import android.os.Process;
 import android.provider.MediaStore;
+import android.support.annotation.RequiresPermission;
 import android.support.v4.content.FileProvider;
 
 import java.io.File;
@@ -37,6 +39,7 @@ public class Capturandro {
     private static String fileProviderAuthority;
     private AsyncTask<Void, Void, Void> deleteTask;
 
+    @RequiresPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE)
     public Capturandro(Context context, CapturandoCallback callback, String fileProviderAuthority) {
         super();
         this.callback = callback;
@@ -63,6 +66,7 @@ public class Capturandro {
         outState.putParcelable(KEY, state);
     }
 
+    @RequiresPermission(allOf = { Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.CAMERA })
     public void importImageFromCamera(final Activity activity, final int requestCode) {
         importImageFromCamera(activity, requestCode, -1);
     }
@@ -86,6 +90,7 @@ public class Capturandro {
      * When executing subscribe on the Obserable<Uri> image processing may take place (on a seperate thread).
      * Image processing is done on a single background thread to prevent oom
      */
+    @RequiresPermission(allOf = { Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.CAMERA })
     public void importImageFromCamera(final Activity activity, final int requestCode, final int longestSide) {
         String filename = BitmapUtil.getUniqueFilename(activity);
         state = new CameraState(longestSide, filename);
@@ -106,10 +111,12 @@ public class Capturandro {
 
     }
 
+    @RequiresPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE)
     public void importImageFromGallery(Activity activity, int requestCode) {
         importImageFromGallery(activity, requestCode, -1);
     }
 
+    @RequiresPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE)
     public void importImageFromGallery(Activity activity, int requestCode, int longestSide) {
         importImageFromGallery(activity, requestCode, longestSide, true);
     }
@@ -120,6 +127,7 @@ public class Capturandro {
      * When executing subscribe on the Obserable<Uri> image processing may take place (on a seperate thread).
      * * Image processing is done on a single background thread to prevent oom
      */
+    @RequiresPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE)
     public void importImageFromGallery(final Activity activity, final int requestCode, final int longestSide, final boolean multiselect) {
         state = new GalleryState(longestSide, multiselect);
         Intent intent;
@@ -140,6 +148,7 @@ public class Capturandro {
         }
     }
 
+    @RequiresPermission(allOf = { Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.CAMERA })
     public void onActivityResult(Activity activity, int requestCode, int resultCode, Intent intent) throws CapturandroException {
         if (state != null && resultCode == Activity.RESULT_OK) {
             if (state instanceof CameraState) {

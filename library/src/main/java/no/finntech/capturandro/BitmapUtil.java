@@ -1,11 +1,13 @@
 package no.finntech.capturandro;
 
+import android.Manifest;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Matrix;
 import android.net.Uri;
 import android.os.Build;
+import android.support.annotation.RequiresPermission;
 import android.support.v4.content.FileProvider;
 
 import java.io.Closeable;
@@ -24,6 +26,7 @@ class BitmapUtil {
     private BitmapUtil() {
     }
 
+    @RequiresPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE)
     static Uri getProcessedImage(Context context, File inFile, int longestSide, int orientation) {
         Bitmap bitmap;
         bitmap = decodeBitmapFile(inFile, longestSide);
@@ -31,6 +34,7 @@ class BitmapUtil {
         return saveBitmap(context, rotatedBitmap);
     }
 
+    @RequiresPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE)
     static Uri getProcessedImage(Context context, InputStream inputStream, int longestSide, int orientation) {
         try {
             File file = new File(getUniqueFilename(context));
@@ -46,10 +50,12 @@ class BitmapUtil {
         }
     }
 
+    @RequiresPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE)
     static String getUniqueFilename(Context context) {
         return new File(context.getExternalCacheDir().getAbsolutePath(), "capturandro-" + System.currentTimeMillis() + "." + random.nextInt() + ".jpg").toString();
     }
 
+    @RequiresPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE)
     public static Uri saveBitmap(Context context, Bitmap bitmap) throws IllegalArgumentException {
         FileOutputStream out = null;
         String filename = getUniqueFilename(context);
