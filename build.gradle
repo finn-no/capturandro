@@ -1,10 +1,18 @@
 buildscript {
     ext.androidGradleVersion = "2.3.0-beta4"
+
+    repositories {
+        jcenter()
+    }
+
+    dependencies {
+        classpath "com.android.tools.build:gradle:${androidGradleVersion}"
+    }
 }
 
 allprojects {
     group = 'no.finntech'
-    version = '0.0.27'
+    version = '0.0.28-SNAPSHOT'
 }
 
 subprojects {
@@ -22,8 +30,8 @@ subprojects {
     repositories {
         jcenter()
         mavenLocal()
-
-//        maven { url "http://repo.maven.apache.org/maven2" }
     }
 
 }
+
+apply plugin: 'android-reporting'
