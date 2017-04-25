@@ -12,7 +12,7 @@ buildscript {
 
 allprojects {
     group = 'no.finntech'
-    version = '0.0.28-SNAPSHOT'
+    version = '0.0.28'
 }
 
 subprojects {
