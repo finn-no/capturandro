@@ -1,5 +1,5 @@
 buildscript {
-    ext.androidGradleVersion = "2.3.0-beta4"
+    ext.androidGradleVersion = "2.3.0"
 
     repositories {
         jcenter()
