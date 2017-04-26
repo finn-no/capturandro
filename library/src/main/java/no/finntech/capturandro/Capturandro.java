@@ -26,7 +26,7 @@ import rx.Scheduler;
 import rx.schedulers.Schedulers;
 
 /*
-* This is the main class for the capturandro library.
+*  This is the main class for the capturandro library.
 */
 public class Capturandro {
     private static final String KEY = "CAPTURANDO_STATE";
