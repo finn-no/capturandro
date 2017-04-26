@@ -2,6 +2,7 @@ language: android
 branches:
   only:
   - master
+  - /^capturandro-.*$/
 android:
   components:
   - tools
