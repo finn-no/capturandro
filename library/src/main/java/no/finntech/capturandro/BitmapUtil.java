@@ -21,6 +21,7 @@ import java.io.OutputStream;
 import java.util.Random;
 
 class BitmapUtil {
+    private static final String HUAWEI_MANUFACTURER = "Huawei";
     private static final Random random = new Random();
 
     private BitmapUtil() {
@@ -37,7 +38,8 @@ class BitmapUtil {
     @RequiresPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE)
     static Uri getProcessedImage(Context context, InputStream inputStream, int longestSide, int orientation) {
         try {
-            File file = new File(getUniqueFilename(context));
+            String filename = getUniqueFilename(context);
+            File file = new File(filename);
             FileOutputStream fos = new FileOutputStream(file);
             copy(inputStream, fos);
 
@@ -52,7 +54,16 @@ class BitmapUtil {
 
     @RequiresPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE)
     static String getUniqueFilename(Context context) {
-        return new File(context.getExternalCacheDir().getAbsolutePath(), "capturandro-" + System.currentTimeMillis() + "." + random.nextInt() + ".jpg").toString();
+        String parent = context.getExternalCacheDir().getAbsolutePath();
+        /**
+         * Fix for issue with Huawei phones with memory card and Android 7.0
+         * http://stackoverflow.com/questions/39895579/fileprovider-error-onhuawei-devices
+         */
+
+        if (HUAWEI_MANUFACTURER.equalsIgnoreCase(Build.MANUFACTURER) && Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            parent = context.getCacheDir().getAbsolutePath();
+        }
+        return new File(parent, "capturandro-" + System.currentTimeMillis() + "." + random.nextInt() + ".jpg").toString();
     }
 
     @RequiresPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE)
