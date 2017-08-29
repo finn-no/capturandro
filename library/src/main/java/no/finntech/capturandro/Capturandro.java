@@ -21,9 +21,9 @@ import java.io.File;
 import java.io.FilenameFilter;
 import java.util.concurrent.Executors;
 
-import rx.Observable;
-import rx.Scheduler;
-import rx.schedulers.Schedulers;
+import io.reactivex.Observable;
+import io.reactivex.Scheduler;
+import io.reactivex.schedulers.Schedulers;
 
 /*
 * This is the main class for the capturandro library.

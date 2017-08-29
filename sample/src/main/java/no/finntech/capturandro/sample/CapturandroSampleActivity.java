@@ -22,10 +22,10 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import io.reactivex.Observable;
+import io.reactivex.functions.Consumer;
 import no.finntech.capturandro.Capturandro;
 import no.finntech.capturandro.CapturandroException;
-import rx.Observable;
-import rx.functions.Action1;
 
 public class CapturandroSampleActivity extends Activity {
     private static final int CAMERA_RESULT_CODE = 1;
@@ -133,16 +133,16 @@ public class CapturandroSampleActivity extends Activity {
             }
 
             processing++;
-            observable.subscribe(new Action1<Uri>() {
+            observable.subscribe(new Consumer<Uri>() {
                 @Override
-                public void call(Uri uri) {
+                public void accept(Uri uri) {
                     downloadComplete();
                     uris.add(uri);
                     showImage(resolveBitmap(uri));
                 }
-            }, new Action1<Throwable>() {
+            }, new Consumer<Throwable>() {
                 @Override
-                public void call(Throwable throwable) {
+                public void accept(Throwable throwable) {
                     downloadComplete();
                     Toast.makeText(CapturandroSampleActivity.this, "Import of image(s) from gallery failed", Toast.LENGTH_LONG).show();
                 }
