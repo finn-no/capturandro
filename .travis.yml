@@ -2,7 +2,6 @@ language: android
 branches:
   only:
   - master
-  - rxjava2
   - /^capturandro-.*$/
 android:
   components:

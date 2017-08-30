@@ -11,8 +11,8 @@ buildscript {
 }
 
 allprojects {
-    group = 'no.finntech.capturandro2'
-    version = '0.0.29'
+    group = 'no.finntech'
+    version = '1.0.0'
 }
 
 subprojects {
