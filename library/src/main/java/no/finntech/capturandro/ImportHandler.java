@@ -112,16 +112,21 @@ class ImportHandler {
     }
 
     private static int getOrientation(ContentResolver contentResolver, Uri photoUri) {
-        Cursor cursor = contentResolver.query(photoUri,
-                new String[]{MediaStore.Images.ImageColumns.ORIENTATION}, null, null, null);
-        try {
-            if (cursor.moveToFirst()) {
-                return cursor.getInt(0);
-            } else {
-                return -1;
+        if (photoUri.getScheme().equals("file")) {
+            File file = new File(photoUri.toString());
+            return getOrientation(file);
+        } else {
+            Cursor cursor = contentResolver.query(photoUri,
+                    new String[]{MediaStore.Images.ImageColumns.ORIENTATION}, null, null, null);
+            try {
+                if (cursor.moveToFirst()) {
+                    return cursor.getInt(0);
+                } else {
+                    return -1;
+                }
+            } finally {
+                cursor.close();
             }
-        } finally {
-            cursor.close();
         }
     }
 
