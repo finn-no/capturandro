@@ -21,6 +21,7 @@ script:
 deploy:
   provider: script
   script: "./gradlew publish bintrayUpload"
+  skip_cleanup: true
   on:
     tags: true
     branch: master
