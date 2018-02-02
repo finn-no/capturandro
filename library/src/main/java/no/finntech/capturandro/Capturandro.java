@@ -178,6 +178,11 @@ public class Capturandro {
         }
     }
 
+    public Observable<Uri> uploadImageFromUri(Context context, Uri imageUri, int longestSide) {
+        ImportHandler importHandler = new ImportHandler(context, longestSide);
+        return importHandler.gallery(scheduler, imageUri);
+    }
+
     private void clearAllCachedBitmaps(Context context) {
         File externalCacheDir = context.getExternalCacheDir();
         if (externalCacheDir != null) {
