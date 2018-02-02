@@ -178,9 +178,9 @@ public class Capturandro {
         }
     }
 
-    public Observable<Uri> uploadImageFromUri(Context context, Uri imageUri, int longestSide) {
+    public void uploadImageFromUri(Context context, Uri imageUri, int longestSide, int requestCode) {
         ImportHandler importHandler = new ImportHandler(context, longestSide);
-        return importHandler.gallery(scheduler, imageUri);
+        callback.onImport(requestCode, importHandler.gallery(scheduler, imageUri));
     }
 
     private void clearAllCachedBitmaps(Context context) {
