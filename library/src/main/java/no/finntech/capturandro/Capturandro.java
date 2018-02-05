@@ -178,7 +178,7 @@ public class Capturandro {
         }
     }
 
-    public void uploadImageFromUri(Context context, Uri imageUri, int longestSide, int requestCode) {
+    public void importImageFromUri(Context context, Uri imageUri, int longestSide, int requestCode) {
         ImportHandler importHandler = new ImportHandler(context, longestSide);
         callback.onImport(requestCode, importHandler.gallery(scheduler, imageUri));
     }
