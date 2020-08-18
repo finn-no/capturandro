@@ -7,8 +7,9 @@ import android.graphics.BitmapFactory;
 import android.graphics.Matrix;
 import android.net.Uri;
 import android.os.Build;
-import android.support.annotation.RequiresPermission;
-import android.support.v4.content.FileProvider;
+
+import androidx.annotation.RequiresPermission;
+import androidx.core.content.FileProvider;
 
 import java.io.Closeable;
 import java.io.File;
@@ -54,16 +55,23 @@ class BitmapUtil {
 
     @RequiresPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE)
     static String getUniqueFilename(Context context) {
-        String parent = context.getExternalCacheDir().getAbsolutePath();
-        /**
+        File cacheDir = getCacheDir(context);
+        return new File(cacheDir, "capturandro-" + System.currentTimeMillis() + "." + random.nextInt() + ".jpg").getAbsolutePath();
+    }
+
+    static File getCacheDir(Context context) {
+        File cacheDir = context.getExternalCacheDir();
+        /*
          * Fix for issue with Huawei phones with memory card and Android 7.0
          * http://stackoverflow.com/questions/39895579/fileprovider-error-onhuawei-devices
+         *
+         * Also fixes cases where for some reason external cache dir is unavailable.
          */
-
-        if (HUAWEI_MANUFACTURER.equalsIgnoreCase(Build.MANUFACTURER) && Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-            parent = context.getCacheDir().getAbsolutePath();
+        if (cacheDir == null ||
+                (HUAWEI_MANUFACTURER.equalsIgnoreCase(Build.MANUFACTURER) && Build.VERSION.SDK_INT >= Build.VERSION_CODES.N)) {
+            cacheDir = context.getCacheDir();
         }
-        return new File(parent, "capturandro-" + System.currentTimeMillis() + "." + random.nextInt() + ".jpg").toString();
+        return cacheDir;
     }
 
     @RequiresPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE)

@@ -1,6 +1,7 @@
 package no.finntech.capturandro.sample;
 
 import android.Manifest;
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.ProgressDialog;
 import android.content.Intent;
@@ -9,14 +10,15 @@ import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
-import android.support.annotation.NonNull;
-import android.support.v4.app.ActivityCompat;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import androidx.annotation.NonNull;
+import androidx.core.app.ActivityCompat;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -49,6 +51,12 @@ public class CapturandroSampleActivity extends Activity {
         for (Uri uri : uris) {
             showImage(resolveBitmap(uri));
         }
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        capturandro.onDestroy();
     }
 
     @Override
@@ -123,6 +131,7 @@ public class CapturandroSampleActivity extends Activity {
         int processing = 0;
         private ProgressDialog progressDialog = null;
 
+        @SuppressLint("CheckResult")
         @Override
         public void onImport(int requestCode, Observable<Uri> observable) {
             if (progressDialog == null) {
@@ -133,19 +142,13 @@ public class CapturandroSampleActivity extends Activity {
             }
 
             processing++;
-            observable.subscribe(new Consumer<Uri>() {
-                @Override
-                public void accept(Uri uri) {
-                    downloadComplete();
-                    uris.add(uri);
-                    showImage(resolveBitmap(uri));
-                }
-            }, new Consumer<Throwable>() {
-                @Override
-                public void accept(Throwable throwable) {
-                    downloadComplete();
-                    Toast.makeText(CapturandroSampleActivity.this, "Import of image(s) from gallery failed", Toast.LENGTH_LONG).show();
-                }
+            observable.subscribe(uri -> {
+                downloadComplete();
+                uris.add(uri);
+                showImage(resolveBitmap(uri));
+            }, throwable -> {
+                downloadComplete();
+                Toast.makeText(CapturandroSampleActivity.this, "Import of image(s) from gallery failed", Toast.LENGTH_LONG).show();
             });
         }
 
