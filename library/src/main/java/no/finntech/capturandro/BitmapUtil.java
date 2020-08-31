@@ -56,7 +56,7 @@ class BitmapUtil {
     @RequiresPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE)
     static String getUniqueFilename(Context context) {
         File cacheDir = getCacheDir(context);
-        return new File(cacheDir, "capturandro-" + System.currentTimeMillis() + "." + random.nextInt() + ".jpg").getAbsolutePath();
+        return new File(cacheDir, Capturandro.TEMPFILE_PREFIX + System.currentTimeMillis() + "." + random.nextInt() + ".jpg").getAbsolutePath();
     }
 
     static File getCacheDir(Context context) {

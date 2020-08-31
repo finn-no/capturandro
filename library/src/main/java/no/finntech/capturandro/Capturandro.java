@@ -30,6 +30,7 @@ import io.reactivex.schedulers.Schedulers;
 */
 public class Capturandro {
     private static final String KEY = "CAPTURANDO_STATE";
+    protected static final String TEMPFILE_PREFIX = "capturandro-";
     public static final int DEFAULT_STORED_IMAGE_COMPRESSION_PERCENT = 75;
 
     private final CapturandoCallback callback;
@@ -65,6 +66,7 @@ public class Capturandro {
         outState.putParcelable(KEY, state);
     }
 
+    @RequiresPermission(Manifest.permission.CAMERA)
     public void importImageFromCamera(final Activity activity, final int requestCode) {
         importImageFromCamera(activity, requestCode, -1);
     }
@@ -88,6 +90,7 @@ public class Capturandro {
      * When executing subscribe on the Obserable<Uri> image processing may take place (on a seperate thread).
      * Image processing is done on a single background thread to prevent oom
      */
+    @RequiresPermission(Manifest.permission.CAMERA)
     public void importImageFromCamera(final Activity activity, final int requestCode, final int longestSide) {
         String filename = BitmapUtil.getUniqueFilename(activity);
         state = new CameraState(longestSide, filename);
@@ -181,7 +184,7 @@ public class Capturandro {
         if (cacheDir != null) {
             deleteTask = Completable.create(emitter -> {
                         File[] files = cacheDir.listFiles((dir, filename) ->
-                                filename.startsWith("capturandro-") && filename.endsWith(".jpg")
+                                filename.startsWith(TEMPFILE_PREFIX) && filename.endsWith(".jpg")
                         );
                         if (files != null) {
                             for (File file : files) {
