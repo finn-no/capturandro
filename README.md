@@ -41,11 +41,10 @@ capturandro.importImageFromGallery(activity, MY_GALLERY_CODE, 1024, true);
 ```
 
 ### Update your AndroidManifest.xml
-Make sure to have the following permission lines in your AndroidManifest.xml. If you are targeting Marshmallow or newer, make
-sure you have been granted these permissions before using Capturandro.
+Make sure to have the following permission line in your AndroidManifest.xml. If you are targeting Marshmallow or newer, make
+sure you have been granted this permission before using Capturandro.
 ```xml
 <uses-permission android:name="android.permission.CAMERA" />
-<uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
 ```
 
 Since Nougat, you are no longer allowed to share file:// URIs between applications, so you will need a
@@ -64,12 +63,14 @@ the final argument to the Capturandro constructor:
 ```
 
 Lastly, you'll need to specify the path where you'll be storing your captured images in
-`res/xml/provider_paths.xml`. Capturandro will store images in `Context.getExternalCacheDir`. (Read more about 
+`res/xml/provider_paths.xml`. Capturandro will attempt to store images in `Context.getExternalCacheDir` or, failing that,
+`Context.getCacheDir`. (Read more about 
 [FileProvider](https://developer.android.com/reference/android/support/v4/content/FileProvider.html)). If you
 prefer the more restrictive `files-external-path` to `external-path` you will need a recent (24.2.x) version of the support library:
 ```xml
 <paths xmlns:android="http://schemas.android.com/apk/res/android">
-    <external-path name="my_images" path="."/>
+    <external-cache-path name="external-cache-path" path="."/>
+    <cache-path name="private-cache-path" path="." />
     ...
 </paths>
 ```
@@ -81,13 +82,13 @@ repositories {
 }
 
 dependencies {
-    compile('no.finntech:capturandro:0.0.26@aar')
+    compile('no.finntech:capturandro:1.0.5@aar')
 }
 ```
 
 ## License
 
-    Copyright (C) 2018 FINN.no.
+    Copyright (C) 2020 FINN.no.
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.

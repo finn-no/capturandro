@@ -1,14 +1,13 @@
 package no.finntech.capturandro;
 
-import android.Manifest;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.database.Cursor;
-import android.media.ExifInterface;
 import android.net.Uri;
 import android.provider.MediaStore;
-import android.support.annotation.RequiresPermission;
 import android.util.Log;
+
+import androidx.exifinterface.media.ExifInterface;
 
 import java.io.File;
 import java.io.IOException;
@@ -36,60 +35,49 @@ class ImportHandler {
     }
 
     Observable<Uri> camera(Scheduler scheduler, final String cameraFilename) {
-        return Observable.create(new ObservableOnSubscribe<Uri>() {
-                                     @Override
-                                     @RequiresPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE)
-                                     public void subscribe(ObservableEmitter<Uri> emitter) {
-                                         if (cameraFilename != null) {
-                                             File file = new File(cameraFilename);
-                                             emitter.onNext(BitmapUtil.getProcessedImage(context, file, longestSide, getOrientation(file)));
-                                             emitter.onComplete();
-                                         } else {
-                                             emitter.onError(new CapturandroException("Could not get image from camera"));
-                                         }
-                                     }
-                                 }
+        return Observable.create((ObservableOnSubscribe<Uri>) emitter -> {
+                    if (cameraFilename != null) {
+                        File file = new File(cameraFilename);
+                        emitter.onNext(BitmapUtil.getProcessedImage(context, file, longestSide, getOrientation(file)));
+                        emitter.onComplete();
+                    } else {
+                        emitter.onError(new CapturandroException("Could not get image from camera"));
+                    }
+                }
         ).subscribeOn(scheduler).observeOn(AndroidSchedulers.mainThread());
     }
 
     Observable<Uri> gallery(Scheduler scheduler, final Uri selectedImage) {
-        return Observable.create(new ObservableOnSubscribe<Uri>() {
-                                     @Override
-                                     public void subscribe(ObservableEmitter<Uri> emitter) {
-                                         if (selectedImage == null) {
-                                             emitter.onError(new CapturandroException("Could not get image - it's null"));
-                                             return;
-                                         }
-                                         if (isUserAttemptingToAddVideo(selectedImage)) {
-                                             emitter.onError(new CapturandroException("User selected video"));
-                                             return;
-                                         }
-                                         try {
-                                             int orientation = getOrientation(context.getContentResolver(), selectedImage);
-                                             InputStream inputStream = context.getContentResolver().openInputStream(selectedImage);
-                                             if (inputStream == null) {
-                                                 inputStream = openRemoteImage(selectedImage);
-                                             }
-                                             if (inputStream == null) {
-                                                 emitter.onError(new CapturandroException("Could not resolve url " + selectedImage));
-                                                 return;
-                                             }
-                                             try {
-                                                 Uri uri = BitmapUtil.getProcessedImage(context, inputStream, longestSide, orientation);
-                                                 returnAndComplete(emitter, uri);
-                                             } finally {
-                                                 inputStream.close();
-                                             }
-                                         } catch (IOException e) {
-                                             emitter.onError(new CapturandroException(e));
-                                         }
-                                     }
-
-                                     private void returnAndComplete(ObservableEmitter<Uri> subscriber, Uri uri) {
-                                         subscriber.onNext(uri);
-                                         subscriber.onComplete();
-                                     }
-                                 }
+        return Observable.create((ObservableOnSubscribe<Uri>) emitter -> {
+            if (selectedImage == null) {
+                emitter.onError(new CapturandroException("Could not get image - it's null"));
+                return;
+            }
+            if (isUserAttemptingToAddVideo(selectedImage)) {
+                emitter.onError(new CapturandroException("User selected video"));
+                return;
+            }
+            try {
+                int orientation = getOrientation(context.getContentResolver(), selectedImage);
+                InputStream inputStream = context.getContentResolver().openInputStream(selectedImage);
+                if (inputStream == null) {
+                    inputStream = openRemoteImage(selectedImage);
+                }
+                if (inputStream == null) {
+                    emitter.onError(new CapturandroException("Could not resolve url " + selectedImage));
+                    return;
+                }
+                try {
+                    Uri uri = BitmapUtil.getProcessedImage(context, inputStream, longestSide, orientation);
+                    emitter.onNext(uri);
+                    emitter.onComplete();
+                } finally {
+                    inputStream.close();
+                }
+            } catch (IOException e) {
+                emitter.onError(new CapturandroException(e));
+            }
+        }
         ).subscribeOn(scheduler).observeOn(AndroidSchedulers.mainThread());
     }
 

@@ -1,7 +1,8 @@
 buildscript {
-    ext.androidGradleVersion = "2.3.0"
+    ext.androidGradleVersion = "4.0.0"
 
     repositories {
+        google()
         jcenter()
     }
 
@@ -12,12 +13,13 @@ buildscript {
 
 allprojects {
     group = 'no.finntech'
-    version = '1.0.4'
+    version = '1.0.5'
 }
 
 subprojects {
     buildscript {
         repositories {
+            google()
             jcenter()
             mavenLocal()
         }
@@ -28,6 +30,7 @@ subprojects {
     }
 
     repositories {
+        google()
         jcenter()
         mavenLocal()
     }
