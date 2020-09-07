@@ -19,7 +19,7 @@ object OrientationUtil {
             val projection = arrayOf(MediaStore.Images.ImageColumns.ORIENTATION)
             val cursor = contentResolver.query(photoUri, projection, null, null, null)
             if (cursor != null) {
-                if (cursor.moveToFirst()) {
+                if (cursor.moveToFirst() && cursor.columnCount > 0) {
                     return cursor.getInt(0)
                 }
                 cursor.close()
