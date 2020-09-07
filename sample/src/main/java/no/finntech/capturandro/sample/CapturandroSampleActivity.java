@@ -25,11 +25,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 import io.reactivex.Observable;
-import io.reactivex.functions.Consumer;
 import no.finntech.capturandro.Capturandro;
 import no.finntech.capturandro.CapturandroException;
 
-public class CapturandroSampleActivity extends Activity {
+public class CapturandroSampleActivity extends Activity implements ActivityCompat.OnRequestPermissionsResultCallback {
     private static final int CAMERA_RESULT_CODE = 1;
     private static final int GALLERY_RESULT_CODE = 2;
     private static final int CAMERA_PERMISSION_CODE = 3;
