@@ -1,13 +1,9 @@
 package no.finntech.capturandro;
 
-import android.content.ContentResolver;
 import android.content.Context;
 import android.database.Cursor;
 import android.net.Uri;
 import android.provider.MediaStore;
-import android.util.Log;
-
-import androidx.exifinterface.media.ExifInterface;
 
 import java.io.File;
 import java.io.IOException;
@@ -15,10 +11,12 @@ import java.io.InputStream;
 import java.net.URL;
 
 import io.reactivex.Observable;
-import io.reactivex.ObservableEmitter;
 import io.reactivex.ObservableOnSubscribe;
 import io.reactivex.Scheduler;
 import io.reactivex.android.schedulers.AndroidSchedulers;
+
+import static no.finntech.capturandro.OrientationUtil.getOrientation;
+import static no.finntech.capturandro.OrientationUtil.readExifFromFile;
 
 class ImportHandler {
     private final static String[] FILE_PATH_COLUMNS = {
@@ -38,7 +36,10 @@ class ImportHandler {
         return Observable.create((ObservableOnSubscribe<Uri>) emitter -> {
                     if (cameraFilename != null) {
                         File file = new File(cameraFilename);
-                        emitter.onNext(BitmapUtil.getProcessedImage(context, file, longestSide, getOrientation(file)));
+                        Uri bitmapUri = BitmapUtil.getProcessedImage(
+                                context, file, longestSide, getOrientation(readExifFromFile(file))
+                        );
+                        emitter.onNext(bitmapUri);
                         emitter.onComplete();
                     } else {
                         emitter.onError(new CapturandroException("Could not get image from camera"));
@@ -58,7 +59,7 @@ class ImportHandler {
                 return;
             }
             try {
-                int orientation = getOrientation(context.getContentResolver(), selectedImage);
+                int orientation = getOrientation(selectedImage, context.getContentResolver());
                 InputStream inputStream = context.getContentResolver().openInputStream(selectedImage);
                 if (inputStream == null) {
                     inputStream = openRemoteImage(selectedImage);
@@ -99,59 +100,7 @@ class ImportHandler {
         }
     }
 
-    private static int getOrientation(ContentResolver contentResolver, Uri photoUri) {
-        if (photoUri.getScheme().equals("file")) {
-            File file = new File(photoUri.toString());
-            return getOrientation(file);
-        } else {
-            Cursor cursor = contentResolver.query(photoUri,
-                    new String[]{MediaStore.Images.ImageColumns.ORIENTATION}, null, null, null);
-            try {
-                if (cursor.moveToFirst()) {
-                    return cursor.getInt(0);
-                } else {
-                    return -1;
-                }
-            } finally {
-                cursor.close();
-            }
-        }
-    }
-
-    private static int getOrientation(File file) {
-        ExifInterface exif = getExifFromFile(file);
-
-        int orientation = exif.getAttributeInt(ExifInterface.TAG_ORIENTATION, 1);
-        switch (orientation) {
-            case 0:
-                break;
-            case 3:
-                orientation = 180;
-                break;
-            case 6:
-                orientation = 90;
-                break;
-            case 8:
-                orientation = 270;
-                break;
-            default:
-                orientation = 0;
-                break;
-        }
-        return orientation;
-    }
-
-    private static ExifInterface getExifFromFile(File file) {
-        try {
-            return new ExifInterface(file.getPath());
-        } catch (IOException e) {
-            Log.i("Capturandro", "Could not read Exif data from file: " + file.getPath());
-        }
-        return null;
-    }
-
     private boolean isUserAttemptingToAddVideo(Uri selectedImage) {
         return selectedImage != null && selectedImage.toString().startsWith("content://media/external/video/");
     }
-
 }
