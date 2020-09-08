@@ -82,7 +82,7 @@ repositories {
 }
 
 dependencies {
-    compile('no.finntech:capturandro:1.0.5@aar')
+    compile('no.finntech:capturandro:1.0.4@aar')
 }
 ```
 
