@@ -55,7 +55,7 @@ object OrientationUtil {
     @JvmStatic
     fun readExifFromFile(file: File): ExifInterface? {
         try {
-            return ExifInterface(file)
+            return ExifInterface(file.path)
         } catch (e: IOException) {
         }
         Log.i("Capturandro", "Unable to read exif data from file: ${file.path}")
